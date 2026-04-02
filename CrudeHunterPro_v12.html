@@ -1,0 +1,2920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crude Hunter Pro">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0f'/><text y='.9em' font-size='90'>⚡</text></svg>">
+<title>Crude Hunter Pro v2 — MCX + NIFTY</title>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — HIGH VISIBILITY ALL LIGHTING
+   Day / Night / Sunlight readable guaranteed
+═══════════════════════════════════════════ */
+:root {
+  --bg:      #0a0a0f;
+  --bg2:     #111118;
+  --bg3:     #18181f;
+  --bg4:     #202028;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.14);
+  --text:    #ffffff;
+  --text2:   #ccccdd;
+  --text3:   #7777aa;
+
+  /* Signal colors — max contrast, sunlight visible */
+  --green:        #00ff88;
+  --green-bg:     rgba(0,255,136,0.08);
+  --green-border: rgba(0,255,136,0.35);
+  --red:          #ff3333;
+  --red-bg:       rgba(255,51,51,0.08);
+  --red-border:   rgba(255,51,51,0.35);
+  --amber:        #ffcc00;
+  --amber-bg:     rgba(255,204,0,0.08);
+  --amber-border: rgba(255,204,0,0.35);
+  --orange:       #ff7700;
+  --orange-bg:    rgba(255,119,0,0.08);
+  --blue:         #44aaff;
+  --blue-bg:      rgba(68,170,255,0.08);
+  --blue-border:  rgba(68,170,255,0.35);
+  --purple:       #bb55ff;
+  --purple-bg:    rgba(187,85,255,0.08);
+  --purple-border:rgba(187,85,255,0.35);
+
+  --mono: 'Courier New', monospace;
+  --r: 10px;
+  --r2: 14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── LAPTOP LAYOUT ─── */
+@media (min-width: 768px) {
+  .app-shell { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+  .header { grid-column: 1 / -1; }
+  .sidebar { display: flex !important; grid-row: 2; flex-direction: column; background: var(--bg2); border-right: 1px solid var(--border); padding: 16px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+  .main-content { grid-row: 2; overflow-y: auto; }
+  .bottom-nav { display: none !important; }
+  .tab-content { max-width: 780px; margin: 0 auto; padding: 20px 24px; }
+  .signal-dir { font-size: 40px !important; }
+  .metric-val { font-size: 26px !important; }
+}
+
+/* ─── MOBILE LAYOUT ─── */
+@media (max-width: 767px) {
+  .sidebar { display: none !important; }
+  .main-content { padding-bottom: 70px; }
+  .tab-content { padding: 12px; }
+}
+
+/* HEADER */
+.header {
+  background: var(--bg2);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-logo { font-size: 20px; font-weight: 800; color: var(--amber); letter-spacing: 1px; }
+.header-badge { font-size: 10px; background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber); padding: 2px 8px; border-radius: 20px; letter-spacing: 1px; }
+.live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.wti-box { text-align: right; }
+.wti-label { font-size: 10px; color: var(--text3); }
+.wti-price { font-size: 17px; font-weight: 700; font-family: var(--mono); color: var(--amber); }
+
+/* SIDEBAR NAV (laptop) */
+.sidebar { display: none; }
+.sb-nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text3);
+  background: none; border: none;
+  border-left: 3px solid transparent;
+  cursor: pointer; width: 100%; text-align: left;
+  transition: all 0.15s;
+}
+.sb-nav-btn:hover { color: var(--text2); background: rgba(255,255,255,0.03); }
+.sb-nav-btn.active { color: var(--amber); border-left-color: var(--amber); background: rgba(255,204,0,0.05); }
+.sb-nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sb-section { font-size: 10px; color: var(--text3); letter-spacing: 2px; padding: 14px 20px 4px; text-transform: uppercase; }
+.sb-divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+/* BOTTOM NAV (mobile) */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex; z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.bnav-btn {
+  flex: 1; padding: 10px 4px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: color 0.2s;
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.bnav-btn.active { color: var(--amber); }
+.bnav-icon { font-size: 18px; }
+
+/* TABS */
+.tab { display: none; }
+.tab.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.2px; color: var(--text3);
+  text-transform: uppercase; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* SIGNAL BOX — core output element */
+.signal-box {
+  border-radius: var(--r2); padding: 22px 18px;
+  text-align: center; margin-bottom: 12px; border: 2px solid;
+}
+.signal-box.ce  { background: var(--green-bg);  border-color: var(--green); }
+.signal-box.pe  { background: var(--red-bg);    border-color: var(--red); }
+.signal-box.wait{ background: var(--amber-bg);  border-color: var(--amber); }
+.signal-box.block{background: var(--purple-bg); border-color: var(--purple); }
+.signal-dir { font-size: 34px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; }
+.signal-dir.ce  { color: var(--green); }
+.signal-dir.pe  { color: var(--red); }
+.signal-dir.wait{ color: var(--amber); }
+.signal-dir.block{color: var(--purple); }
+.signal-conf { font-size: 28px; font-weight: 700; font-family: var(--mono); margin: 4px 0; }
+.signal-sub { font-size: 14px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+
+/* SCORE BAR */
+.score-number { font-size: 52px; font-weight: 900; font-family: var(--mono); line-height: 1; }
+.score-bar-bg { height: 12px; background: var(--bg3); border-radius: 6px; overflow: hidden; margin: 8px 0; }
+.score-bar-fill { height: 12px; border-radius: 6px; transition: width 1s ease; }
+
+/* LAYER ROW */
+.layer-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+.layer-row:last-child { border-bottom: none; }
+.layer-name { font-size: 13px; color: var(--text2); min-width: 155px; }
+.layer-track { flex: 1; height: 5px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+.layer-fill { height: 5px; border-radius: 3px; }
+.layer-pts { font-size: 14px; font-weight: 700; font-family: var(--mono); min-width: 44px; text-align: right; }
+
+/* INPUTS */
+.input-group { margin-bottom: 10px; }
+.input-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; display: block; font-weight: 500; }
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+input[type=number], input[type=text], input[type=password], select, textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--mono);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--amber); }
+select option { background: var(--bg2); color: var(--text); }
+textarea { resize: vertical; min-height: 80px; font-size: 13px; }
+
+/* BUTTONS */
+.btn {
+  width: 100%; padding: 14px;
+  border-radius: var(--r); border: none;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: all 0.15s; margin-bottom: 8px;
+  font-family: inherit;
+}
+.btn-primary   { background: var(--amber); color: #000; }
+.btn-primary:hover { background: #ffd633; }
+.btn-green     { background: var(--green); color: #000; }
+.btn-red       { background: var(--red); color: #fff; }
+.btn-blue      { background: var(--blue); color: #000; }
+.btn-outline   { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { background: var(--bg3); }
+.btn-telegram  { background: #0088cc; color: #fff; }
+.btn:active    { transform: scale(0.97); }
+.btn-sm { padding: 8px 12px; font-size: 13px; width: auto; margin: 0; }
+
+/* METRIC GRID */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.metric-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.metric { background: var(--bg3); border-radius: var(--r); padding: 12px 14px; }
+.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.metric-val { font-size: 22px; font-weight: 700; font-family: var(--mono); }
+.metric-val.green  { color: var(--green); }
+.metric-val.red    { color: var(--red); }
+.metric-val.amber  { color: var(--amber); }
+.metric-val.blue   { color: var(--blue); }
+.metric-val.white  { color: #fff; }
+.metric-val.orange { color: var(--orange); }
+
+/* TAGS / BADGES */
+.tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+.tag-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+.tag-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+.tag-amber  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.tag-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-border); }
+.tag-gray   { background: var(--bg4); color: var(--text2); border: 1px solid var(--border2); }
+
+/* STATUS BOX */
+.status-box { border-radius: var(--r); padding: 12px 14px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid; }
+.status-box.ok     { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.status-box.warn   { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber); }
+.status-box.error  { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+.status-box.info   { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue); }
+.status-box.gemini { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+
+/* CHECK LIST */
+.check-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+.check-item:last-child { border-bottom: none; }
+.check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; margin-top: 1px; }
+.check-item.checked .check-box { background: var(--green); border-color: var(--green); color: #000; }
+.check-text { font-size: 14px; color: var(--text2); line-height: 1.5; }
+.check-item.checked .check-text { color: var(--text3); text-decoration: line-through; }
+
+/* RULE CARD */
+.rule-card { background: var(--bg3); border-radius: var(--r); padding: 14px; margin-bottom: 10px; border-left: 3px solid; }
+.rule-num  { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 3px; }
+.rule-title{ font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.rule-desc { font-size: 13px; color: var(--text3); line-height: 1.6; }
+
+/* TABLE */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { font-size: 11px; color: var(--text3); text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.data-table td { font-size: 13px; padding: 9px 6px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.data-table td:last-child { text-align: right; font-family: var(--mono); color: var(--text); }
+.data-table tr:last-child td { border-bottom: none; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; margin: 16px 0 10px; }
+
+/* LOADING */
+.loading { text-align: center; padding: 20px; color: var(--text3); font-size: 14px; }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESULT SECTION */
+.result-section { display: none; }
+.result-section.show { display: block; }
+
+/* WARNING BANNERS */
+.warn-banner { padding: 11px 16px; font-size: 14px; font-weight: 700; text-align: center; display: none; }
+.warn-banner.show { display: block; }
+.warn-banner.yellow { background: rgba(255,204,0,0.15); color: var(--amber); border-bottom: 1px solid var(--amber-border); }
+.warn-banner.red    { background: rgba(255,51,51,0.15);  color: var(--red);   border-bottom: 1px solid var(--red-border); }
+
+/* ALARM OVERLAYS */
+.alarm-overlay { display: none; position: fixed; inset: 0; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; }
+.alarm-overlay.active { display: flex; }
+.alarm-overlay.sl30 { background: rgba(200,10,10,0.97); }
+.alarm-overlay.sl50 { background: rgba(100,0,180,0.97); }
+.alarm-title { font-size: 52px; font-weight: 900; color: #fff; letter-spacing: 2px; animation: shake 0.25s infinite; }
+.alarm-sub { font-size: 18px; color: rgba(255,255,255,0.9); margin: 12px 0 32px; line-height: 1.6; }
+@keyframes shake { 0%,100%{transform:translateX(0);} 33%{transform:translateX(-8px);} 66%{transform:translateX(8px);} }
+
+/* STOCK GRID */
+.stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stock-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg3); border-radius: 8px; padding: 8px 10px; }
+.stock-name { font-size: 12px; color: var(--text2); font-weight: 600; }
+.stock-sel { padding: 4px 6px; font-size: 12px; background: var(--bg4); border: 1px solid var(--border); color: var(--text); border-radius: 6px; width: 90px; }
+
+/* TELEGRAM BADGE */
+.tg-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,136,204,0.12); border: 1px solid rgba(0,136,204,0.3); border-radius: 6px; padding: 3px 10px; font-size: 12px; color: #0088cc; font-weight: 600; }
+
+/* SCROLL */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+/* SETTINGS SECTION */
+.set-row { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.set-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; font-weight: 500; }
+.set-desc  { font-size: 11px; color: var(--text3); margin-top: 5px; line-height: 1.5; }
+
+/* CONFIDENCE BADGE */
+.conf-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+.conf-high   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+.conf-medium { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.conf-low    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+
+/* AUTO FETCH STATUS */
+.fetch-grid { display: flex; flex-direction: column; gap: 5px; }
+.fetch-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; }
+.fetch-icon { width: 18px; text-align: center; }
+
+/* URL LINKS */
+.url-link-btn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg3); border-radius: var(--r); margin-bottom: 8px; text-decoration: none; color: var(--text2); font-size: 13px; border: 1px solid var(--border); }
+.url-link-btn:hover { border-color: var(--amber); color: var(--amber); }
+.url-icon { font-size: 18px; }
+
+/* KEY LEVELS */
+.level-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.level-item:last-child { border-bottom: none; }
+.level-val { font-size: 18px; font-weight: 700; font-family: var(--mono); }
+.level-dist { font-size: 12px; color: var(--text3); }
+
+/* EXHAUSTION ALERT */
+.exhaustion-alert { background: rgba(255,119,0,0.1); border: 2px solid var(--orange); border-radius: var(--r2); padding: 16px; margin-bottom: 12px; }
+.exhaustion-title { font-size: 16px; font-weight: 700; color: var(--orange); margin-bottom: 8px; }
+.exhaustion-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- WARNING BANNERS -->
+<div class="warn-banner yellow" id="warn1030">⚠️ 10:30 PM — Last 90 mins of MCX. Theta burning fast. Consider booking profits.</div>
+<div class="warn-banner red"    id="warn1100">🚨 11:00 PM — DO NOT enter new positions. MCX closes in 30 mins.</div>
+
+<div class="app-shell">
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-logo">⚡ CRUDE HUNTER PRO</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px;">
+        <span class="live-dot"></span>
+        <span id="live-time">--:--</span> IST &nbsp;·&nbsp; v2.0
+        <span id="tg-status" class="tg-badge" style="display:none;margin-left:8px;">📱 TG</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="wti-box">
+      <div class="wti-label">WTI CRUDE</div>
+      <div class="wti-price" id="wti-price">—</div>
+    </div>
+    <div class="wti-box">
+      <div class="wti-label">NIFTY</div>
+      <div class="wti-price" id="header-nifty" style="color:var(--blue);">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SIDEBAR (laptop only) ═══ -->
+<div class="sidebar">
+  <div class="sb-section">MCX Crude</div>
+  <button class="sb-nav-btn active" onclick="showTab('mcx-signal',this)"><span class="sb-nav-icon">📊</span>MCX Signal</button>
+  <button class="sb-nav-btn" onclick="showTab('mcx-position',this)"><span class="sb-nav-icon">💰</span>MCX P&L + SL</button>
+  <div class="sb-divider"></div>
+  <div class="sb-section">NIFTY Options</div>
+  <button class="sb-nav-btn" onclick="showTab('nifty-signal',this)"><span class="sb-nav-icon">🎯</span>NIFTY Direction</button>
+  <button class="sb-nav-btn" onclick="showTab('nifty-position',this)"><span class="sb-nav-icon">📈</span>NIFTY P&L</button>
+  <button class="sb-nav-btn" onclick="showTab('momentum',this)"><span class="sb-nav-icon">🚀</span>Trade with Flow</button>
+  <div class="sb-divider"></div>
+  <div class="sb-section">System</div>
+  <button class="sb-nav-btn" onclick="showTab('rules',this)"><span class="sb-nav-icon">✅</span>GO/NO-GO Rules</button>
+  <button class="sb-nav-btn" onclick="showTab('settings',this)"><span class="sb-nav-icon">⚙️</span>Settings</button>
+  <div class="sb-divider"></div>
+  <div style="padding:16px 20px;">
+    <div style="font-size:11px;color:var(--text3);line-height:1.8;">
+      Rohit · rohit99313@gmail.com<br>
+      Zerodha Kite · Android + Laptop<br>
+      MCX CrudeoilM + NSE NIFTY
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main-content">
+
+<!-- ════════════════════════════════════════
+     TAB 1: MCX SIGNAL
+════════════════════════════════════════ -->
+<div class="tab active tab-content" id="tab-mcx-signal">
+
+  <!-- AUTO FETCH VIA KITE -->
+  <div class="card">
+    <div id="mcx-saved-banner" style="display:none;font-size:12px;padding:6px 0 2px;margin-bottom:4px;"></div>
+    <div class="card-title">🤖 Auto-Fetch MCX Option Chain via Kite API</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Fetches CrudeoilM option chain automatically using your Kite access token. No manual reading needed.</div>
+    <div class="input-group">
+      <label class="input-label">Expiry Month (MCX CrudeoilM)</label>
+      <select id="mcx-expiry-auto">
+        <option value="25APR2025">Apr 2025</option>
+        <option value="19MAY2025">May 2025</option>
+        <option value="19JUN2025">Jun 2025</option>
+        <option value="17JUL2025">Jul 2025</option>
+        <option value="19AUG2025">Aug 2025</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="autoFetchMCXChain()">
+      <span id="mcx-auto-btn-text">🔄 AUTO-FETCH MCX OPTION CHAIN</span>
+    </button>
+    <div id="mcx-auto-status"></div>
+  </div>
+
+  <!-- MANUAL ENTRY (fallback) -->
+  <div class="card">
+    <div class="card-title">✍️ Manual Entry (Fallback if Kite not connected)</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">From mcxindia.com/market-data/option-chain → CRUDEOILM</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Underlying Price (₹)</label>
+        <input type="number" id="mcx-underlying" placeholder="e.g. 6300">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Days to Expiry</label>
+        <select id="mcx-dte">
+          <option value="21">21+ days — Safe</option>
+          <option value="14">14–21 days — Watch</option>
+          <option value="7">7–14 days — Caution</option>
+          <option value="3">3–7 days — Danger</option>
+          <option value="0">0–3 days — STAY OUT</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Total Call OI</label>
+        <input type="number" id="mcx-call-oi" placeholder="Sum of Call OI">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Total Put OI</label>
+        <input type="number" id="mcx-put-oi" placeholder="Sum of Put OI">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Highest Call OI Strike (Call Wall)</label>
+        <input type="number" id="mcx-call-wall" placeholder="e.g. 6400">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Highest Put OI Strike (Put Wall)</label>
+        <input type="number" id="mcx-put-wall" placeholder="e.g. 6200">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">ATM Call Premium (₹)</label>
+        <input type="number" id="mcx-atm-call" placeholder="ATM CE LTP">
+      </div>
+      <div class="input-group">
+        <label class="input-label">ATM Put Premium (₹)</label>
+        <input type="number" id="mcx-atm-put" placeholder="ATM PE LTP">
+      </div>
+    </div>
+    <button class="btn btn-outline" onclick="analyseMCX()">⚡ Analyse Manually</button>
+  </div>
+
+  <!-- MCX RESULT -->
+  <div class="result-section" id="mcx-result">
+    <div id="mcx-signal-box"></div>
+    <div class="card">
+      <div class="card-title">Signal Breakdown</div>
+      <div id="mcx-breakdown"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Theta Danger Meter</div>
+      <div id="mcx-theta"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Dual Check Verification</div>
+      <div id="mcx-dual"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TAB 2: MCX POSITION
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-mcx-position">
+
+  <!-- KITE LIVE POSITIONS -->
+  <div class="card">
+    <div class="card-title">📱 Live Kite Positions (Auto)</div>
+    <button class="btn btn-primary" onclick="fetchKitePositions()">🔄 Fetch My CrudeoilM Positions</button>
+    <div id="kite-positions"></div>
+  </div>
+
+  <!-- MANUAL P&L -->
+  <div class="card">
+    <div class="card-title">💰 MCX Position P&L Calculator</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Strike Price</label>
+        <input type="number" id="pos-strike" placeholder="e.g. 6300">
+      </div>
+      <div class="input-group">
+        <label class="input-label">CE or PE</label>
+        <select id="pos-type">
+          <option value="CE">CE — Call Option</option>
+          <option value="PE">PE — Put Option</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Entry Premium (₹)</label>
+        <input type="number" id="pos-entry" placeholder="What you paid">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Current Premium (₹)</label>
+        <input type="number" id="pos-current" placeholder="Live price now" oninput="autoCheckSL()">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Number of Lots</label>
+        <input type="number" id="pos-lots" value="1" min="1">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Days to Expiry</label>
+        <input type="number" id="pos-dte" placeholder="e.g. 8" min="0">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="calcMCXPos()">📊 CALCULATE P&L</button>
+  </div>
+
+  <div class="result-section" id="mcx-pos-result">
+    <div class="metric-grid" id="mcx-pos-metrics"></div>
+    <div id="mcx-pos-sl"></div>
+    <div id="mcx-pos-theta"></div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TAB 3: NIFTY SIGNAL
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-nifty-signal">
+
+  <!-- EVENT BLOCKER BANNER -->
+  <div id="nifty-event-banner"></div>
+
+  <!-- AUTO FETCH ALL DATA -->
+  <div class="card">
+    <div class="card-title">🌐 Auto-Fetch All NIFTY Data</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Fetches: NIFTY price · India VIX · RSI(14) · 50 DMA · 200 DMA · S&P 500 · USD/INR · Top 10 stocks via Kite · PCR attempt · Gemini news scan</div>
+    <button class="btn btn-primary" onclick="fetchAllNiftyData()">
+      <span id="nifty-fetch-text">🚀 FETCH ALL DATA NOW</span>
+    </button>
+    <div id="nifty-fetch-status" class="fetch-grid" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- MOMENTUM EXHAUSTION DETECTOR -->
+  <div class="card">
+    <div class="card-title">💥 Momentum Exhaustion Detector</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">For situations like today — Nifty up 560pts, you sensed reversal. This confirms or denies it.</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Today's NIFTY Move (pts)</label>
+        <input type="number" id="nifty-move" placeholder="e.g. +560 or -200">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Volume vs Average</label>
+        <select id="nifty-vol">
+          <option value="3">3x+ — Very High</option>
+          <option value="2">2x — High</option>
+          <option value="1" selected>Normal volume</option>
+          <option value="0">Below average</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">NIFTY RSI (14)</label>
+        <input type="number" id="nifty-rsi" placeholder="e.g. 68" step="0.1">
+      </div>
+      <div class="input-group">
+        <label class="input-label">NSE PCR (live)</label>
+        <input type="number" id="nifty-pcr" placeholder="e.g. 0.82" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL OVERRIDE -->
+  <div class="card">
+    <div class="card-title">✍️ Manual Data Override</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">NIFTY Price</label>
+        <input type="number" id="nifty-price" placeholder="e.g. 24500">
+      </div>
+      <div class="input-group">
+        <label class="input-label">India VIX</label>
+        <input type="number" id="nifty-vix" placeholder="e.g. 14.5" step="0.1">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">50 DMA Position</label>
+        <select id="nifty-dma50">
+          <option value="above">Above 50 DMA — Bullish</option>
+          <option value="below">Below 50 DMA — Bearish</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">200 DMA Position</label>
+        <select id="nifty-dma200">
+          <option value="above">Above 200 DMA — Bullish</option>
+          <option value="below">Below 200 DMA — Bearish</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">FII Net Today (₹ Cr) — fill after 6 PM</label>
+      <input type="number" id="nifty-fii" placeholder="e.g. -2500 (negative = selling)">
+    </div>
+  </div>
+
+  <!-- STOCK ALIGNMENT -->
+  <div class="card">
+    <div class="card-title">📊 Top 10 NIFTY Stock Alignment</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">Auto-filled via Kite if connected. Override manually if needed.</div>
+    <div class="stock-grid">
+      <div class="stock-row"><span class="stock-name">HDFC Bank (13%)</span><select class="stock-sel" id="s-hdfc"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">Reliance (9%)</span><select class="stock-sel" id="s-reliance"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">ICICI Bank (7%)</span><select class="stock-sel" id="s-icici"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">TCS (5%)</span><select class="stock-sel" id="s-tcs"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">Infosys (4%)</span><select class="stock-sel" id="s-infy"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">Kotak Bank (4%)</span><select class="stock-sel" id="s-kotak"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">L&T (4%)</span><select class="stock-sel" id="s-lt"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">Axis Bank (3%)</span><select class="stock-sel" id="s-axis"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">SBI (3%)</span><select class="stock-sel" id="s-sbi"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+      <div class="stock-row"><span class="stock-name">ITC (3%)</span><select class="stock-sel" id="s-itc"><option value="1">📈 Bull</option><option value="0" selected>↔ Neutral</option><option value="-1">📉 Bear</option></select></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <button class="btn btn-primary" style="flex:2;" onclick="analyseNifty()">⚡ ANALYSE NIFTY DIRECTION</button>
+    <button class="btn btn-telegram" style="flex:1;" onclick="scanNewsGemini()">🤖 AI Scan</button>
+  </div>
+
+  <!-- NIFTY RESULT -->
+  <div class="result-section" id="nifty-result">
+    <div id="nifty-signal-box"></div>
+    <div id="nifty-exhaustion-box"></div>
+    <div class="card">
+      <div class="card-title">Direction Score — 5 Layer Engine</div>
+      <div id="nifty-score-display"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Layer Breakdown</div>
+      <div id="nifty-layers"></div>
+    </div>
+    <div id="nifty-gemini-card"></div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TAB 4: NIFTY POSITION
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-nifty-position">
+
+  <div class="card">
+    <div class="card-title">📈 NIFTY Positional Options P&L (3-Month)</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Strike Price</label>
+        <input type="number" id="np-strike" placeholder="e.g. 24800">
+      </div>
+      <div class="input-group">
+        <label class="input-label">CE or PE</label>
+        <select id="np-type">
+          <option value="CE">CE — Call</option>
+          <option value="PE">PE — Put</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Entry Premium (₹)</label>
+        <input type="number" id="np-entry" placeholder="e.g. 180">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Current Premium (₹)</label>
+        <input type="number" id="np-current" placeholder="Live now">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Lots (75 units each)</label>
+        <input type="number" id="np-lots" value="1" min="1">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Days to Expiry</label>
+        <input type="number" id="np-dte" placeholder="e.g. 75" min="0">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="calcNiftyPos()">📊 CALCULATE P&L</button>
+  </div>
+
+  <div class="result-section" id="nifty-pos-result">
+    <div class="metric-grid" id="np-metrics"></div>
+    <div id="np-sl-card"></div>
+    <div id="np-target-card"></div>
+  </div>
+
+  <!-- KEY LEVELS -->
+  <div class="card">
+    <div class="card-title">📍 Key NIFTY Levels Tracker</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="number" id="new-level" placeholder="Add key level e.g. 24000" style="flex:1;">
+      <button class="btn btn-outline btn-sm" onclick="addLevel()">+ Add</button>
+    </div>
+    <div id="levels-list"></div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TAB: TRADE WITH FLOW — MOMENTUM TRACKER
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-momentum">
+
+  <!-- HEADER EXPLANATION -->
+  <div style="background:linear-gradient(135deg,rgba(255,184,0,0.15),rgba(255,102,0,0.1));border:1px solid rgba(255,184,0,0.3);border-radius:14px;padding:16px;margin-bottom:12px;">
+    <div style="font-size:16px;font-weight:700;color:var(--amber);margin-bottom:6px;">🚀 Trade with Flow — 3 Month Expiry Strategy</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+      NIFTY moved 150+ points → Wait for pullback → Enter at better price → Hold 3-5 days → Trail SL → Exit when momentum dies.<br>
+      <span style="color:var(--green);">3-month expiry = theta barely burns = time is your safety net.</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: MORNING SCAN -->
+  <div class="card">
+    <div class="card-title">📊 Step 1 — Morning Scan (9:15–9:45 AM)</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Yesterday's NIFTY Close (₹)</label>
+        <input type="number" id="mf-prev-close" placeholder="e.g. 22679" oninput="calcMomentum()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Today's Current NIFTY (₹)</label>
+        <input type="number" id="mf-current" placeholder="e.g. 22182" oninput="calcMomentum()">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Today's RSI (14)</label>
+        <input type="number" id="mf-rsi" placeholder="e.g. 32" step="0.1" oninput="calcMomentum()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Volume vs Average</label>
+        <select id="mf-vol" onchange="calcMomentum()">
+          <option value="3">3x+ Very High</option>
+          <option value="2" selected>2x High</option>
+          <option value="1">Normal</option>
+          <option value="0.5">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">NIFTY 15-min candle direction</label>
+        <select id="mf-candle" onchange="calcMomentum()">
+          <option value="down3">3+ red candles in a row</option>
+          <option value="down2">2 red candles</option>
+          <option value="mixed">Mixed</option>
+          <option value="up2">2 green candles</option>
+          <option value="up3">3+ green candles in a row</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">India VIX</label>
+        <input type="number" id="mf-vix" placeholder="e.g. 14.5" step="0.1" oninput="calcMomentum()">
+      </div>
+    </div>
+  </div>
+
+  <!-- MOMENTUM VERDICT -->
+  <div id="mf-verdict"></div>
+
+  <!-- STEP 2: PULLBACK ZONE -->
+  <div class="result-section" id="mf-pullback-section">
+    <div class="card">
+      <div class="card-title">⏳ Step 2 — Wait for Pullback Zone</div>
+      <div id="mf-pullback-display"></div>
+    </div>
+
+    <!-- STEP 3: ENTRY SIGNAL -->
+    <div class="card">
+      <div class="card-title">🎯 Step 3 — Entry Signal</div>
+      <div id="mf-entry-display"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: TRAIL SL MANAGER -->
+  <div class="card">
+    <div class="card-title">📈 Step 4 — Trail SL Manager</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Enter your trade details below. App tracks your profit and tells you exactly when to move SL.</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Option Type Bought</label>
+        <select id="mf-option-type">
+          <option value="PE">PE — Put (for falling market)</option>
+          <option value="CE">CE — Call (for rising market)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Strike Price Bought</label>
+        <input type="number" id="mf-strike" placeholder="e.g. 22200">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Entry Premium Paid (₹)</label>
+        <input type="number" id="mf-entry-prem" placeholder="e.g. 180" oninput="calcTrailSL()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Current Premium (₹)</label>
+        <input type="number" id="mf-current-prem" placeholder="Live now" oninput="calcTrailSL()">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">Lots (75 units each)</label>
+        <input type="number" id="mf-lots" value="1" min="1" oninput="calcTrailSL()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Entry Date</label>
+        <input type="text" id="mf-entry-date" placeholder="e.g. 02 Apr">
+      </div>
+    </div>
+    <div id="mf-trail-display"></div>
+  </div>
+
+  <!-- MOMENTUM RULES -->
+  <div class="card">
+    <div class="card-title">📋 Trade with Flow — Golden Rules</div>
+    <div class="rule-card" style="border-left-color:var(--green);">
+      <div class="rule-num" style="color:var(--green);">RULE 1 — MINIMUM MOVE</div>
+      <div class="rule-title">Only trade when NIFTY moved 150+ points</div>
+      <div class="rule-desc">Less than 150 points is noise. 150+ points means real institutional momentum is in play. Below 150 — do not trade this strategy.</div>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--amber);">
+      <div class="rule-num" style="color:var(--amber);">RULE 2 — WAIT FOR PULLBACK</div>
+      <div class="rule-title">Never chase — wait for 30-40% retracement</div>
+      <div class="rule-desc">After 200 point fall, NIFTY will bounce 60-80 points. THAT is your entry point for PE. Better price, confirmed direction, lower risk.</div>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--blue);">
+      <div class="rule-num" style="color:var(--blue);">RULE 3 — 3 MONTH EXPIRY ALWAYS</div>
+      <div class="rule-title">Buy June when it's April. Buy July when it's May.</div>
+      <div class="rule-desc">3-month expiry = theta only ₹4-5/day. If you're wrong on timing but right on direction, you have weeks to recover. Weekly expiry has zero forgiveness.</div>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--red);">
+      <div class="rule-num" style="color:var(--red);">RULE 4 — TRAIL SL STRICTLY</div>
+      <div class="rule-title">At +20pts move SL to breakeven. Always.</div>
+      <div class="rule-desc">Once you have 20 points profit, move SL to your entry price. You cannot lose money. Then let momentum run. This is how you ride 200-300 points.</div>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--purple);">
+      <div class="rule-num" style="color:var(--purple);">RULE 5 — EXIT TRIGGER</div>
+      <div class="rule-title">Exit when structure breaks — not when you're nervous</div>
+      <div class="rule-desc">Exit when: RSI crosses 72/28 · OR reversal candle forms · OR NIFTY reclaims the key level it broke. Do NOT exit just because premium dropped ₹10.</div>
+    </div>
+    <div class="rule-card" style="border-left-color:var(--orange);">
+      <div class="rule-num" style="color:var(--orange);">RULE 6 — MAX 3 TRADES/MONTH</div>
+      <div class="rule-title">High conviction only. 3-5 trades per month maximum.</div>
+      <div class="rule-desc">This is not a daily trading strategy. Wait for clear 150+ point momentum days. Those happen 3-5 times per month. Each one is a high conviction opportunity.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TAB 5: RULES
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-rules">
+
+  <div class="card">
+    <div class="card-title">✅ GO / NO-GO Checklist — Tick ALL Before Every Trade</div>
+    <div id="gonogo-list">
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Price is at a key level — round number, prev swing high/low, weekly H/L</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Liquidity sweep occurred — level was broken then reversed back</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Strong reversal candle confirmed after the sweep</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Volume spike on reversal candle (preferred, not mandatory)</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">HDFC Bank + Reliance + ICICI aligned with trade direction</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">No major blocking event today — RBI / Fed / Election / Budget</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">For MCX: Time is between 6 PM and 9 PM IST only</div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">SL level calculated and mentally committed before placing order</div></div>
+    </div>
+    <div id="gonogo-verdict" style="margin-top:14px;"></div>
+    <button class="btn btn-outline" style="margin-top:8px;" onclick="resetChecklist()">🔄 Reset Checklist</button>
+  </div>
+
+  <div class="section-label">MCX GOLDEN RULES</div>
+  <div class="rule-card" style="border-left-color:var(--red);">
+    <div class="rule-num" style="color:var(--red);">RULE 1 — STOP LOSS (NEVER SKIP)</div>
+    <div class="rule-title">30% SL always. Zero debate.</div>
+    <div class="rule-desc">Bought ₹400 → SL = ₹280. When premium hits ₹280 — EXIT. No hoping. No waiting. This single rule prevents the ₹7,000 style loss. App alarms automatically.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--amber);">
+    <div class="rule-num" style="color:var(--amber);">RULE 2 — ENTRY TIME (MCX)</div>
+    <div class="rule-title">Enter only 6 PM – 9 PM IST</div>
+    <div class="rule-desc">US market opens 7:30 PM IST. EIA crude data 8:30 PM IST. Real directional moves happen in this window. Morning entries are gambling — price has no direction yet.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--red);">
+    <div class="rule-num" style="color:var(--red);">RULE 3 — NEVER AFTER 10 PM</div>
+    <div class="rule-title">35% of daily theta burns in last 60 mins</div>
+    <div class="rule-desc">After 10 PM you are fighting price AND theta simultaneously. You are paying ₹17+ per hour just for time passing. App auto-warns at 10:30 PM and 11:00 PM every night.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--orange);">
+    <div class="rule-num" style="color:var(--orange);">RULE 4 — NEVER AVERAGE DOWN</div>
+    <div class="rule-title">A falling option is a WARNING not a discount</div>
+    <div class="rule-desc">This single mistake turned a ₹1,350 manageable loss into ₹7,000. Options can go to ₹0. Adding to a losing position multiplies total risk. EXIT at 30% SL instead.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--blue);">
+    <div class="rule-num" style="color:var(--blue);">RULE 5 — READ OPTION CHAIN FIRST</div>
+    <div class="rule-title">2 minutes of data before every trade</div>
+    <div class="rule-desc">PCR was below 0.8 and price was above Max Pain when you last bought calls. The chain was screaming bearish. The data was there — now the app reads it for you automatically.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--green);">
+    <div class="rule-num" style="color:var(--green);">RULE 6 — NIFTY POSITIONAL SL</div>
+    <div class="rule-title">45% SL (more room than MCX 30%)</div>
+    <div class="rule-desc">3-month expiry means daily swings of 1-2% are completely normal. 45% SL gives trade room to breathe. Theta burns only ₹4-5/day on ₹180 premium — time is your asset.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--purple);">
+    <div class="rule-num" style="color:var(--purple);">RULE 7 — REACT, DON'T PREDICT</div>
+    <div class="rule-title">No confirmation = No trade. Always.</div>
+    <div class="rule-desc">Your hunch about NIFTY falling was 100% correct today. The problem was no confirmation system. Now you have one. Wait for the score. When it hits HIGH — act with full confidence.</div>
+  </div>
+  <div class="rule-card" style="border-left-color:var(--amber);">
+    <div class="rule-num" style="color:var(--amber);">RULE 8 — CAPITAL LIMITS</div>
+    <div class="rule-title">Max ₹40K per trade. Max 1 lot.</div>
+    <div class="rule-desc">Low frequency: 3-5 trades per month only. High conviction setups only — if the signal is MEDIUM confidence, use ATM and half capital. STRONG confidence only for full position.</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TAB 6: SETTINGS
+════════════════════════════════════════ -->
+<div class="tab tab-content" id="tab-settings">
+
+  <!-- TELEGRAM SETUP -->
+  <div class="card">
+    <div class="card-title">📱 Telegram Alerts Setup</div>
+    <div class="status-box info" style="margin-bottom:12px;">Telegram sends instant alerts to your phone even when the app is closed. HIGH confidence signals fire automatically.</div>
+    <div class="set-row">
+      <div class="set-label">Telegram Bot Token</div>
+      <input type="text" id="set-tg-token" placeholder="1234567890:ABCdef...">
+      <div class="set-desc">Get from @BotFather on Telegram → /newbot → copy token</div>
+    </div>
+    <div class="set-row">
+      <div class="set-label">Telegram Chat ID</div>
+      <input type="text" id="set-tg-chatid" placeholder="Your numeric chat ID">
+      <div class="set-desc">Get from @userinfobot on Telegram → it shows your Chat ID</div>
+    </div>
+    <button class="btn btn-telegram" onclick="testTelegram()" style="margin-top:10px;">📱 Test Telegram Alert</button>
+    <div id="tg-test-result" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- KITE API -->
+  <div class="card">
+    <div class="card-title">⚙️ Kite API Configuration</div>
+    <div class="set-row">
+      <div class="set-label">Google Apps Script Bridge URL</div>
+      <input type="text" id="set-bridge-url" placeholder="https://script.google.com/macros/s/...">
+      <div class="set-desc">Your backend that handles Kite login + MCX chain + positions + email alerts</div>
+    </div>
+    <div class="set-row">
+      <div class="set-label">Kite API Key</div>
+      <input type="text" id="set-kite-key" placeholder="Your Kite API Key">
+    </div>
+    <div class="set-row">
+      <div class="set-label">Today's Access Token (refresh daily)</div>
+      <input type="text" id="set-access-token" placeholder="Paste today's Kite access token">
+      <div class="set-desc">Expires at midnight every day (SEBI rule). Open bridge URL every morning to refresh.</div>
+    </div>
+    <div class="set-row">
+      <div class="set-label">Alert Email</div>
+      <input type="text" id="set-email" placeholder="rohit99313@gmail.com" value="rohit99313@gmail.com">
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:12px;">💾 SAVE ALL SETTINGS</button>
+    <button class="btn btn-outline" onclick="testBridge()">🔗 Test Kite Bridge</button>
+  </div>
+
+  <!-- GEMINI AI -->
+  <div class="card">
+    <div class="card-title">🤖 Gemini AI Configuration</div>
+    <div class="set-row">
+      <div class="set-label">Gemini API Key</div>
+      <input type="password" id="set-gemini-key" placeholder="AIzaSy...">
+      <div class="set-desc">From aistudio.google.com → Get API Key. Free tier: 1,500 calls/day.</div>
+    </div>
+  </div>
+
+  <!-- DAILY LOGIN -->
+  <div class="card">
+    <div class="card-title">🔐 Daily Kite Login (30 seconds)</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Do this every morning. Access token expires at midnight (SEBI rule).</div>
+    <button class="btn btn-outline" onclick="openKiteLogin()">🔐 Open Kite Login Page</button>
+  </div>
+
+  <!-- KEY URLS -->
+  <div class="card">
+    <div class="card-title">📱 Add to Home Screen (iPhone & Android)</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:8px;">
+      <b style="color:var(--amber);">iPhone (Safari):</b> Open in Safari → Tap Share button → "Add to Home Screen" → Add<br>
+      <b style="color:var(--amber);">iPhone (Chrome):</b> Tap ⋮ menu → "Add to Home Screen"<br>
+      <b style="color:var(--amber);">Android Chrome):</b> Tap ⋮ menu → "Add to Home Screen"<br>
+      <b style="color:var(--green);">Keep tab open in background</b> for real-time alerts and morning summary.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔗 Key URLs — Bookmark These</div>
+    <a class="url-link-btn" href="https://www.mcxindia.com/market-data/option-chain" target="_blank"><span class="url-icon">📊</span><span>MCX Option Chain — Read before every MCX trade</span></a>
+    <a class="url-link-btn" href="https://www.nseindia.com/option-chain" target="_blank"><span class="url-icon">📈</span><span>NSE Option Chain — NIFTY PCR live data</span></a>
+    <a class="url-link-btn" href="https://www.niftytrader.in/nse-option-chain/nifty" target="_blank"><span class="url-icon">📉</span><span>NiftyTrader — Free live PCR alternative</span></a>
+    <a class="url-link-btn" href="https://kite.zerodha.com" target="_blank"><span class="url-icon">📱</span><span>Zerodha Kite — Place/exit orders here</span></a>
+    <a class="url-link-btn" href="https://developers.kite.trade" target="_blank"><span class="url-icon">⚙️</span><span>Kite Developer Portal — API keys</span></a>
+    <a class="url-link-btn" href="https://script.google.com" target="_blank"><span class="url-icon">🔧</span><span>Google Apps Script — Backend code</span></a>
+    <a class="url-link-btn" href="https://nseindia.com/reports/fii-dii" target="_blank"><span class="url-icon">💰</span><span>NSE FII/DII Data — Check after 6 PM daily</span></a>
+  </div>
+
+  <div style="font-size:11px;color:var(--text3);text-align:center;padding:16px;">
+    Crude Hunter Pro v2.0 · Built for Rohit · rohit99313@gmail.com<br>
+    MCX CrudeoilM Mini + NSE NIFTY Positional · Zerodha Kite + Gemini AI
+  </div>
+
+</div>
+
+</div><!-- end main-content -->
+</div><!-- end app-shell -->
+
+<!-- ═══ BOTTOM NAV (mobile) ═══ -->
+<div class="bottom-nav">
+  <button class="bnav-btn active" onclick="showTab('mcx-signal',this)"><span class="bnav-icon">📊</span>MCX</button>
+  <button class="bnav-btn" onclick="showTab('mcx-position',this)"><span class="bnav-icon">💰</span>P&L</button>
+  <button class="bnav-btn" onclick="showTab('nifty-signal',this)"><span class="bnav-icon">🎯</span>NIFTY</button>
+  <button class="bnav-btn" onclick="showTab('nifty-position',this)"><span class="bnav-icon">📈</span>N-P&L</button>
+  <button class="bnav-btn" onclick="showTab('momentum',this)"><span class="bnav-icon">🚀</span>Flow</button>
+  <button class="bnav-btn" onclick="showTab('rules',this)"><span class="bnav-icon">✅</span>Rules</button>
+  <button class="bnav-btn" onclick="showTab('settings',this)"><span class="bnav-icon">⚙️</span>Setup</button>
+</div>
+
+<!-- ALARM OVERLAYS -->
+<div class="alarm-overlay sl30" id="alarm-sl30">
+  <div class="alarm-title">🚨 EXIT NOW</div>
+  <div class="alarm-sub">30% STOP LOSS HIT<br>Your premium dropped 30% from entry<br>EXIT THE TRADE IMMEDIATELY</div>
+  <button style="background:#fff;color:#cc0000;font-size:20px;font-weight:900;padding:20px 40px;border:none;border-radius:14px;cursor:pointer;margin-bottom:14px;width:100%;" onclick="window.open('https://kite.zerodha.com','_blank')">📱 OPEN KITE — EXIT TRADE</button>
+  <button style="background:rgba(255,255,255,0.15);color:#fff;font-size:15px;padding:14px;border:2px solid rgba(255,255,255,0.3);border-radius:10px;cursor:pointer;width:100%;" onclick="dismissAlarm('sl30')">✓ I have exited — Dismiss Alarm</button>
+</div>
+<div class="alarm-overlay sl50" id="alarm-sl50">
+  <div class="alarm-title">🆘 EMERGENCY</div>
+  <div class="alarm-sub">50% GAP DOWN DETECTED<br>Overnight gap or sudden crash<br>EMERGENCY EXIT NOW</div>
+  <button style="background:#fff;color:#6600cc;font-size:20px;font-weight:900;padding:20px 40px;border:none;border-radius:14px;cursor:pointer;margin-bottom:14px;width:100%;" onclick="window.open('https://kite.zerodha.com','_blank')">📱 OPEN KITE — EXIT NOW</button>
+  <button style="background:rgba(255,255,255,0.15);color:#fff;font-size:15px;padding:14px;border:2px solid rgba(255,255,255,0.3);border-radius:10px;cursor:pointer;width:100%;" onclick="dismissAlarm('sl50')">✓ I have exited — Dismiss Alarm</button>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS — HARDCODED SYSTEM VALUES
+// ═══════════════════════════════════════════════════════════════
+const APP_VERSION     = 'v2.0';
+const DEFAULT_EMAIL   = 'rohit99313@gmail.com';
+const DEFAULT_GEMINI  = 'AIzaSyCwOT2Ceps8NhgWqCgzUxCl0od-30Xk6-s';
+const MCX_LOT_SIZE    = 10;
+const NIFTY_LOT_SIZE  = 75;
+const MCX_SL_PCT      = 0.30;
+const MCX_SL_EMERGENCY= 0.50;
+const NIFTY_SL_PCT    = 0.45;
+const MCX_CHARGES_PER_LOT = 60;
+const NIFTY_CHARGES_PER_LOT = 45;
+const MAX_CAPITAL     = 40000;
+
+// NIFTY heavyweights with index weights
+const NIFTY_STOCKS = [
+  { id:'hdfc',    name:'HDFC Bank',  weight:0.13, kite:'NSE:HDFCBANK'  },
+  { id:'reliance',name:'Reliance',   weight:0.09, kite:'NSE:RELIANCE'  },
+  { id:'icici',   name:'ICICI Bank', weight:0.07, kite:'NSE:ICICIBANK' },
+  { id:'tcs',     name:'TCS',        weight:0.05, kite:'NSE:TCS'       },
+  { id:'infy',    name:'Infosys',    weight:0.04, kite:'NSE:INFY'      },
+  { id:'kotak',   name:'Kotak Bank', weight:0.04, kite:'NSE:KOTAKBANK' },
+  { id:'lt',      name:'L&T',        weight:0.04, kite:'NSE:LT'        },
+  { id:'axis',    name:'Axis Bank',  weight:0.03, kite:'NSE:AXISBANK'  },
+  { id:'sbi',     name:'SBI',        weight:0.03, kite:'NSE:SBIN'      },
+  { id:'itc',     name:'ITC',        weight:0.03, kite:'NSE:ITC'       }
+];
+
+const STORAGE_KEY = 'crude_hunter_v2';
+const LEVELS_KEY  = 'crude_hunter_levels';
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS — LOAD / SAVE
+// ═══════════════════════════════════════════════════════════════
+function getSettings() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+}
+
+function loadSettings() {
+  const s = getSettings();
+  if (s.geminiKey)    document.getElementById('set-gemini-key').value   = s.geminiKey;
+  if (s.kiteKey)      document.getElementById('set-kite-key').value     = s.kiteKey;
+  if (s.bridgeUrl)    document.getElementById('set-bridge-url').value   = s.bridgeUrl;
+  if (s.email)        document.getElementById('set-email').value        = s.email;
+  if (s.accessToken)  document.getElementById('set-access-token').value = s.accessToken;
+  if (s.tgToken)      document.getElementById('set-tg-token').value     = s.tgToken;
+  if (s.tgChatId)     document.getElementById('set-tg-chatid').value    = s.tgChatId;
+  // Pre-fill defaults
+  if (!s.geminiKey)   document.getElementById('set-gemini-key').value   = DEFAULT_GEMINI;
+  if (!s.email)       document.getElementById('set-email').value        = DEFAULT_EMAIL;
+  // Show Telegram status
+  if (s.tgToken && s.tgChatId) document.getElementById('tg-status').style.display = 'inline-flex';
+}
+
+function saveSettings() {
+  const s = {
+    geminiKey:   document.getElementById('set-gemini-key').value.trim(),
+    kiteKey:     document.getElementById('set-kite-key').value.trim(),
+    bridgeUrl:   document.getElementById('set-bridge-url').value.trim(),
+    email:       document.getElementById('set-email').value.trim(),
+    accessToken: document.getElementById('set-access-token').value.trim(),
+    tgToken:     document.getElementById('set-tg-token').value.trim(),
+    tgChatId:    document.getElementById('set-tg-chatid').value.trim()
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  if (s.tgToken && s.tgChatId) document.getElementById('tg-status').style.display = 'inline-flex';
+  alert('✅ All settings saved!');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sb-nav-btn, .bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0,0);
+  // Auto-fetch data when specific tabs open
+  if (id === 'momentum') autoFillMomentumData();
+  if (id === 'nifty-signal') fetchAllNiftyData();
+  if (id === 'mcx-signal') { loadMCXData(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK + MCX TIME WARNINGS
+// ═══════════════════════════════════════════════════════════════
+function updateClock() {
+  const now  = new Date();
+  const ist  = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const h = ist.getHours(), m = ist.getMinutes();
+  document.getElementById('live-time').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  const mins = h * 60 + m;
+  document.getElementById('warn1030').classList.toggle('show', mins >= 22*60+30 && mins < 23*60);
+  document.getElementById('warn1100').classList.toggle('show', mins >= 23*60 && mins <= 23*60+30);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE PRICE FETCHERS
+// ═══════════════════════════════════════════════════════════════
+const PROXIES = [
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+];
+
+async function fetchYahoo(symbol) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+  for (const proxy of PROXIES) {
+    try {
+      const r = await fetch(proxy(url), { signal: AbortSignal.timeout(8000) });
+      const d = await r.json();
+      const meta = d?.chart?.result?.[0]?.meta;
+      if (meta?.regularMarketPrice) return { price: meta.regularMarketPrice, prev: meta.previousClose, data: d };
+    } catch(e) {}
+  }
+  return null;
+}
+
+async function fetchWTI() {
+  const res = await fetchYahoo('CL%3DF');
+  if (res) {
+    const chg = ((res.price - res.prev) / res.prev * 100).toFixed(2);
+    const col = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('wti-price').innerHTML =
+      `<span style="color:${col}">$${res.price.toFixed(2)} (${chg>0?'+':''}${chg}%)</span>`;
+  }
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return 50;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const d = closes[i] - closes[i-1];
+    if (d > 0) gains += d; else losses += Math.abs(d);
+  }
+  const ag = gains / period, al = losses / period;
+  if (al === 0) return 100;
+  return +(100 - 100 / (1 + ag / al)).toFixed(1);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TELEGRAM — DIRECT CALL FROM HTML (no server needed)
+// ═══════════════════════════════════════════════════════════════
+async function sendTelegram(message) {
+  const s = getSettings();
+  const token  = s.tgToken;
+  const chatId = s.tgChatId;
+  if (!token || !chatId) return false;
+  try {
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' })
+    });
+    const d = await r.json();
+    return d.ok;
+  } catch(e) { return false; }
+}
+
+async function testTelegram() {
+  const el = document.getElementById('tg-test-result');
+  el.innerHTML = '<div class="status-box info"><span class="spinner"></span>Sending test message...</div>';
+  // Save first
+  const s = getSettings();
+  s.tgToken  = document.getElementById('set-tg-token').value.trim();
+  s.tgChatId = document.getElementById('set-tg-chatid').value.trim();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+
+  const msg = `⚡ <b>Crude Hunter Pro v2</b>\n\n✅ Telegram alerts are working!\n\nYou will receive HIGH confidence signals here automatically.\n\nMarkets: MCX CrudeoilM + NSE NIFTY`;
+  const ok = await sendTelegram(msg);
+  el.innerHTML = ok
+    ? '<div class="status-box ok">✅ Telegram working! Check your phone.</div>'
+    : '<div class="status-box error">❌ Failed. Check Bot Token and Chat ID are correct.</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO-FETCH MCX OPTION CHAIN via KITE
+// ═══════════════════════════════════════════════════════════════
+async function autoFetchMCXChain() {
+  const s = getSettings();
+  const bridge = s.bridgeUrl;
+  const token  = s.accessToken || document.getElementById('set-access-token')?.value;
+  const expiry = document.getElementById('mcx-expiry-auto').value;
+
+  if (!bridge || !token) {
+    document.getElementById('mcx-auto-status').innerHTML =
+      '<div class="status-box warn">⚠️ Add Bridge URL and Access Token in Settings first.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('mcx-auto-btn-text');
+  btn.innerHTML = '<span class="spinner"></span>Fetching MCX chain...';
+  document.getElementById('mcx-auto-status').innerHTML = '';
+
+  try {
+    // Fetch instruments list to find CrudeoilM tokens for this expiry
+    const instrUrl = `${bridge}?action=mcx_chain&access_token=${token}&expiry=${expiry}`;
+    const r = await fetch(instrUrl, { signal: AbortSignal.timeout(15000) });
+    const data = await r.json();
+
+    if (data.error) throw new Error(data.error);
+
+    if (data.chain) {
+      // Parse and populate fields
+      const chain = data.chain;
+      let totalCallOI = 0, totalPutOI = 0;
+      let maxCallOI = 0, maxCallStrike = 0;
+      let maxPutOI  = 0, maxPutStrike  = 0;
+      let atmCallPrem = 0, atmPutPrem = 0;
+      const underlying = chain.underlying || 0;
+
+      chain.strikes?.forEach(s => {
+        totalCallOI += s.ceOI || 0;
+        totalPutOI  += s.peOI || 0;
+        if ((s.ceOI || 0) > maxCallOI) { maxCallOI = s.ceOI; maxCallStrike = s.strike; }
+        if ((s.peOI || 0) > maxPutOI)  { maxPutOI  = s.peOI; maxPutStrike  = s.strike; }
+        // ATM
+        if (Math.abs(s.strike - underlying) < 50) {
+          atmCallPrem = s.ceLTP || 0;
+          atmPutPrem  = s.peLTP || 0;
+        }
+      });
+
+      document.getElementById('mcx-underlying').value  = Math.round(underlying);
+      document.getElementById('mcx-call-oi').value     = totalCallOI;
+      document.getElementById('mcx-put-oi').value      = totalPutOI;
+      document.getElementById('mcx-call-wall').value   = maxCallStrike;
+      document.getElementById('mcx-put-wall').value    = maxPutStrike;
+      document.getElementById('mcx-atm-call').value    = atmCallPrem;
+      document.getElementById('mcx-atm-put').value     = atmPutPrem;
+
+      document.getElementById('mcx-auto-status').innerHTML =
+        `<div class="status-box ok">✅ MCX chain fetched! Underlying: ₹${Math.round(underlying)} · ${chain.strikes?.length || 0} strikes loaded · PCR: ${(totalPutOI/totalCallOI).toFixed(2)}</div>`;
+      btn.innerHTML = '✅ Chain Loaded — Scroll down to analyse';
+      // Auto-analyse
+      analyseMCX();
+    } else {
+      throw new Error('No chain data returned');
+    }
+  } catch(e) {
+    // Fallback: try direct Kite quotes API
+    document.getElementById('mcx-auto-status').innerHTML =
+      `<div class="status-box warn">⚠️ Bridge method failed (${e.message}). Please use manual entry or update your Google Apps Script with MCX chain support.</div>`;
+    btn.innerHTML = '🔄 AUTO-FETCH MCX OPTION CHAIN';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MCX SIGNAL ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════════════════
+function analyseMCX() {
+  const underlying = parseFloat(document.getElementById('mcx-underlying').value);
+  const callOI     = parseFloat(document.getElementById('mcx-call-oi').value);
+  const putOI      = parseFloat(document.getElementById('mcx-put-oi').value);
+  const callWall   = parseFloat(document.getElementById('mcx-call-wall').value);
+  const putWall    = parseFloat(document.getElementById('mcx-put-wall').value);
+  const atmCall    = parseFloat(document.getElementById('mcx-atm-call').value) || 0;
+  const atmPut     = parseFloat(document.getElementById('mcx-atm-put').value)  || 0;
+  const dteVal     = parseInt(document.getElementById('mcx-dte').value);
+
+  if (!underlying || !callOI || !putOI) {
+    alert('Please fill: Underlying Price, Total Call OI, Total Put OI');
+    return;
+  }
+
+  const pcr = putOI / callOI;
+  const maxPain = callWall && putWall ? Math.round((callWall + putWall) / 2) : underlying;
+  const ivSkew  = atmPut > 0 && atmCall > 0 ? atmPut / atmCall : 1;
+
+  // === SIGNAL SCORING ===
+  let oiScore = 0, mpScore = 0, wallScore = 0, ivScore = 0;
+
+  // OI / PCR signal
+  if      (pcr > 1.3)  oiScore =  2;
+  else if (pcr > 1.0)  oiScore =  1;
+  else if (pcr < 0.7)  oiScore = -2;
+  else if (pcr < 0.9)  oiScore = -1;
+
+  // Max Pain signal
+  if      (underlying < maxPain - 100) mpScore =  1;
+  else if (underlying > maxPain + 100) mpScore = -1;
+
+  // Wall signal
+  if (callWall && underlying < callWall - 150) wallScore =  1;
+  if (putWall  && underlying > putWall  + 150) wallScore = -1;
+
+  // IV skew
+  if      (ivSkew > 1.15) ivScore =  1;
+  else if (ivSkew < 0.85) ivScore = -1;
+
+  const totalScore = oiScore + mpScore + wallScore + ivScore;
+  const dualCheck  = Math.sign(oiScore) === Math.sign(mpScore) && oiScore !== 0;
+
+  // EXPIRY BLOCK
+  if (dteVal === 0) {
+    renderMCXResult('block','🚨 STAY OUT','0–3 days to expiry — absolute no-trade zone',pcr,maxPain,callWall,putWall,dteVal,dualCheck,false);
+    return;
+  }
+
+  let dir, label, sub;
+  if (!dualCheck && oiScore !== 0) {
+    dir = 'wait'; label = '↔ WAIT'; sub = 'OI signal and Max Pain disagree — no trade today';
+  } else if (totalScore >= 3) {
+    dir = 'ce';   label = '⬆ STRONG BUY CE'; sub = `PCR ${pcr.toFixed(2)} · Score ${totalScore}/6 · Dual check PASSED`;
+  } else if (totalScore === 2) {
+    dir = 'ce';   label = '⬆ BUY CE'; sub = `PCR ${pcr.toFixed(2)} · Bullish bias confirmed`;
+  } else if (totalScore <= -3) {
+    dir = 'pe';   label = '⬇ STRONG BUY PE'; sub = `PCR ${pcr.toFixed(2)} · Score ${totalScore}/6 · Dual check PASSED`;
+  } else if (totalScore === -2) {
+    dir = 'pe';   label = '⬇ BUY PE'; sub = `PCR ${pcr.toFixed(2)} · Bearish bias confirmed`;
+  } else {
+    dir = 'wait'; label = '↔ WAIT'; sub = 'Mixed signals — no clear edge today';
+  }
+
+  const conf = Math.abs(totalScore) >= 3 ? 'HIGH' : Math.abs(totalScore) >= 2 ? 'MEDIUM' : 'LOW';
+  saveMCXData();
+  renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dteVal, dualCheck, conf);
+
+  // AUTO TELEGRAM if HIGH confidence — fires when signal CHANGES
+  if (conf === 'HIGH') {
+    const lastMCXSignal = localStorage.getItem('last_mcx_signal') || '';
+    const newMCXSignal  = dir + '_' + Math.round(pcr * 10);
+    if (newMCXSignal !== lastMCXSignal) {
+      localStorage.setItem('last_mcx_signal', newMCXSignal);
+      const msg = `⚡ <b>MCX Signal — HIGH Confidence</b>\n\n${label}\nPCR: ${pcr.toFixed(2)}\nMax Pain: ₹${maxPain}\nCall Wall: ₹${callWall || '--'} | Put Wall: ₹${putWall || '--'}\n\n⚠️ React to confirmation, don't predict.`;
+      sendTelegramSafe(msg);
+    }
+  }
+}
+
+function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, dualCheck, conf) {
+  document.getElementById('mcx-result').classList.add('show');
+
+  // Signal box
+  const confBadge = conf ? `<div style="margin-top:10px;"><span class="conf-badge conf-${conf.toLowerCase()}">${conf} CONFIDENCE</span></div>` : '';
+  document.getElementById('mcx-signal-box').innerHTML = `
+    <div class="signal-box ${dir}">
+      <div class="signal-dir ${dir}">${label}</div>
+      <div class="signal-sub">${sub}</div>
+      ${confBadge}
+    </div>`;
+
+  // Breakdown
+  const pcrClass = pcr > 1.2 ? 'green' : pcr < 0.8 ? 'red' : 'amber';
+  const pcrTxt   = pcr > 1.3 ? 'Strongly Bullish' : pcr > 1.0 ? 'Mild Bullish' : pcr > 0.8 ? 'Neutral' : pcr > 0.6 ? 'Mild Bearish' : 'Strongly Bearish';
+  document.getElementById('mcx-breakdown').innerHTML = `
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">PCR</div><div class="metric-val ${pcrClass}">${pcr.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">Max Pain Est.</div><div class="metric-val white">₹${maxPain}</div></div>
+      <div class="metric"><div class="metric-label">Call Wall</div><div class="metric-val red">₹${callWall||'—'}</div></div>
+      <div class="metric"><div class="metric-label">Put Wall</div><div class="metric-val green">₹${putWall||'—'}</div></div>
+    </div>
+    <table class="data-table">
+      <tr><td>PCR reading</td><td>${pcrTxt}</td></tr>
+      <tr><td>PCR > 1.3 = Bullish · < 0.8 = Bearish</td><td>${pcr > 1.3 ? '✅ Bullish' : pcr < 0.8 ? '🔴 Bearish' : '↔ Neutral'}</td></tr>
+    </table>`;
+
+  // Theta meter
+  const thetaData = [
+    { min:21, max:999, rate:4,  zone:'SAFE',       color:'var(--green)',  label:'21+ days' },
+    { min:14, max:21,  rate:7,  zone:'WATCH',      color:'#88dd44',      label:'14-21 days' },
+    { min:7,  max:14,  rate:12, zone:'CAUTION',    color:'var(--amber)',  label:'7-14 days' },
+    { min:3,  max:7,   rate:20, zone:'DANGER',     color:'var(--orange)', label:'3-7 days' },
+    { min:0,  max:3,   rate:35, zone:'DO NOT TRADE',color:'var(--red)',   label:'0-3 days' }
+  ];
+  const zone = thetaData.find(z => dte >= z.min) || thetaData[4];
+  document.getElementById('mcx-theta').innerHTML = `
+    <div style="display:flex;gap:3px;height:28px;border-radius:6px;overflow:hidden;margin-bottom:10px;">
+      ${thetaData.map(z => `<div style="flex:1;background:${z.color};opacity:${dte >= z.min ? 1 : 0.18};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#000;">${z.zone}</div>`).join('')}
+    </div>
+    <div style="font-size:14px;font-weight:700;color:${zone.color};">Zone: ${zone.zone} (~${zone.rate}% theta/day)</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:4px;">Last 60 mins before MCX close: 35% of daily decay in 1 hour alone</div>`;
+
+  // Dual check
+  document.getElementById('mcx-dual').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid ${pcr>1?'var(--green-border)':'var(--red-border)'};">
+        <div style="font-size:11px;color:var(--text3);">CHECK 1 — OI</div>
+        <div style="font-size:15px;font-weight:700;color:${pcr>1?'var(--green)':'var(--red)'};">${pcr>1?'⬆ BULLISH':'⬇ BEARISH'}</div>
+        <div style="font-size:11px;color:var(--text3);">PCR ${pcr.toFixed(2)}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid ${dualCheck?'var(--green-border)':'var(--amber-border)'};">
+        <div style="font-size:11px;color:var(--text3);">CHECK 2 — Max Pain</div>
+        <div style="font-size:15px;font-weight:700;color:${dualCheck?'var(--green)':'var(--amber)'};">${dualCheck?'✓ AGREES':'✗ DIFFERS'}</div>
+        <div style="font-size:11px;color:var(--text3);">₹${maxPain}</div>
+      </div>
+    </div>
+    <div style="padding:12px;border-radius:var(--r);background:${dualCheck?'var(--green-bg)':'var(--amber-bg)'};border:1px solid ${dualCheck?'var(--green-border)':'var(--amber-border)'};">
+      <span style="font-weight:700;font-size:14px;color:${dualCheck?'var(--green)':'var(--amber)'};">${dualCheck?'✅ DUAL CHECK PASSED — Both signals agree. Proceed.':'⚠️ DUAL CHECK FAILED — Signals conflict. Wait.'}</span>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MCX POSITION P&L + AUTO SL CHECK
+// ═══════════════════════════════════════════════════════════════
+function autoCheckSL() {
+  const entry   = parseFloat(document.getElementById('pos-entry').value);
+  const current = parseFloat(document.getElementById('pos-current').value);
+  if (!entry || !current) return;
+  const sl30 = entry * (1 - MCX_SL_PCT);
+  const sl50 = entry * (1 - MCX_SL_EMERGENCY);
+  if (current <= sl50) fireAlarm('sl50');
+  else if (current <= sl30) fireAlarm('sl30');
+}
+
+function calcMCXPos() {
+  const entry   = parseFloat(document.getElementById('pos-entry').value);
+  const current = parseFloat(document.getElementById('pos-current').value);
+  const lots    = parseInt(document.getElementById('pos-lots').value) || 1;
+  const dte     = parseInt(document.getElementById('pos-dte').value)  || 7;
+
+  if (!entry || !current) { alert('Enter entry and current premium'); return; }
+
+  const pnl    = (current - entry) * MCX_LOT_SIZE * lots;
+  const charges= MCX_CHARGES_PER_LOT * lots;
+  const net    = pnl - charges;
+  const pct    = ((current - entry) / entry * 100).toFixed(1);
+  const sl30   = +(entry * (1 - MCX_SL_PCT)).toFixed(0);
+  const sl50   = +(entry * (1 - MCX_SL_EMERGENCY)).toFixed(0);
+  const thetaRates = [4,7,12,20,35];
+  const tIdx   = dte >= 21 ? 0 : dte >= 14 ? 1 : dte >= 7 ? 2 : dte >= 3 ? 3 : 4;
+  const thetaD = +(entry * thetaRates[tIdx] / 100).toFixed(0);
+  const thetaH = +(entry * 0.35 / 100 * entry / 14.4).toFixed(0);
+  const sl30hit= current <= sl30;
+  const sl50hit= current <= sl50;
+
+  if (sl50hit) fireAlarm('sl50');
+  else if (sl30hit) fireAlarm('sl30');
+
+  document.getElementById('mcx-pos-result').classList.add('show');
+
+  const col = net >= 0 ? 'green' : 'red';
+  document.getElementById('mcx-pos-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Net P&L (after charges)</div><div class="metric-val ${col}">₹${net.toFixed(0)}</div></div>
+    <div class="metric"><div class="metric-label">Return %</div><div class="metric-val ${col}">${pct}%</div></div>
+    <div class="metric"><div class="metric-label">Current Premium</div><div class="metric-val white">₹${current}</div></div>
+    <div class="metric"><div class="metric-label">Zerodha Charges</div><div class="metric-val amber">₹${charges}</div></div>`;
+
+  document.getElementById('mcx-pos-sl').innerHTML = `
+    <div class="card">
+      <div class="card-title" style="color:${sl30hit?'var(--red)':''}">Stop Loss Levels ${sl30hit?'🚨 SL HIT':''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div style="background:${sl30hit?'var(--red-bg)':'var(--bg3)'};border:1px solid ${sl30hit?'var(--red-border)':'var(--border)'};border-radius:var(--r);padding:12px;">
+          <div style="font-size:11px;color:var(--text3);">30% SL — EXIT NOW</div>
+          <div style="font-size:26px;font-weight:700;color:var(--red);font-family:var(--mono);">₹${sl30}</div>
+          <div style="font-size:11px;color:var(--text3);">${sl30hit?'🚨 HIT — EXIT IMMEDIATELY':'Not hit yet'}</div>
+        </div>
+        <div style="background:${sl50hit?'var(--purple-bg)':'var(--bg3)'};border:1px solid ${sl50hit?'var(--purple-border)':'var(--border)'};border-radius:var(--r);padding:12px;">
+          <div style="font-size:11px;color:var(--text3);">50% EMERGENCY</div>
+          <div style="font-size:26px;font-weight:700;color:var(--purple);font-family:var(--mono);">₹${sl50}</div>
+          <div style="font-size:11px;color:var(--text3);">${sl50hit?'🆘 EMERGENCY EXIT':'Gap-down protection'}</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('mcx-pos-theta').innerHTML = `
+    <div class="card">
+      <div class="card-title">Theta Burn Analysis</div>
+      <table class="data-table">
+        <tr><td>Daily theta (~${dte} DTE)</td><td style="color:var(--orange);">₹${thetaD}/day/lot</td></tr>
+        <tr><td>Last-hour burn (35% daily)</td><td style="color:var(--red);">₹${Math.round(entry*0.035*MCX_LOT_SIZE)}/lot</td></tr>
+        <tr><td>Breakeven move needed</td><td>~${Math.ceil(charges/10)} pts</td></tr>
+        <tr><td>Capital at risk (30% SL)</td><td style="color:var(--amber);">₹${(entry*MCX_SL_PCT*MCX_LOT_SIZE*lots).toFixed(0)}</td></tr>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KITE POSITIONS
+// ═══════════════════════════════════════════════════════════════
+async function fetchKitePositions() {
+  const s = getSettings();
+  const bridge = s.bridgeUrl;
+  const token  = s.accessToken || document.getElementById('set-access-token')?.value;
+  const el = document.getElementById('kite-positions');
+
+  if (!bridge || !token) {
+    el.innerHTML = '<div class="status-box warn">⚠️ Add Bridge URL and Access Token in Settings.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Fetching positions...</div>';
+  try {
+    const r = await fetch(`${bridge}?action=positions&access_token=${token}`, { signal: AbortSignal.timeout(12000) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    const all = data.data?.net || [];
+    const crude = all.filter(p => p.tradingsymbol?.includes('CRUDEOIL'));
+    if (crude.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:10px;">No CrudeoilM positions open.</div>';
+      return;
+    }
+    el.innerHTML = crude.map(p => {
+      const pnlCol = (p.pnl||0) >= 0 ? 'green' : 'red';
+      return `<div style="background:var(--bg3);border-radius:var(--r);padding:12px;margin-top:8px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:14px;font-weight:700;">${p.tradingsymbol}</div>
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--${pnlCol});">₹${(p.pnl||0).toFixed(0)}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Qty: ${p.quantity} · Avg: ₹${(p.average_price||0).toFixed(2)} · LTP: ₹${(p.last_price||0).toFixed(2)}</div>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="autoFillMCXPos('${p.average_price}','${p.last_price}','${p.quantity}','${p.tradingsymbol.includes('CE')?'CE':'PE'}')">→ Use in P&L Calculator</button>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="status-box error">❌ Fetch failed: ${e.message}</div>`;
+  }
+}
+
+function autoFillMCXPos(avg, ltp, qty, type) {
+  document.getElementById('pos-entry').value   = parseFloat(avg).toFixed(2);
+  document.getElementById('pos-current').value = parseFloat(ltp).toFixed(2);
+  document.getElementById('pos-lots').value    = Math.max(1, Math.round(qty / MCX_LOT_SIZE));
+  document.getElementById('pos-type').value    = type;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NIFTY AUTO-FETCH ALL DATA
+// ═══════════════════════════════════════════════════════════════
+async function fetchAllNiftyData() {
+  const btn = document.getElementById('nifty-fetch-text');
+  btn.innerHTML = '<span class="spinner"></span>Fetching all data...';
+  const statusEl = document.getElementById('nifty-fetch-status');
+  const rows = [];
+
+  const add = (icon, text, color='var(--text2)') => {
+    rows.push(`<div class="fetch-row"><span class="fetch-icon">${icon}</span><span style="font-size:13px;color:${color};">${text}</span></div>`);
+    statusEl.innerHTML = rows.join('');
+  };
+
+  // 1. NIFTY Price + RSI + DMA
+  try {
+    const res = await fetchYahoo('%5ENSEI');
+    if (res) {
+      document.getElementById('nifty-price').value = Math.round(res.price);
+      document.getElementById('header-nifty').textContent = '₹' + Math.round(res.price).toLocaleString('en-IN');
+      add('✅', `NIFTY: ₹${Math.round(res.price).toLocaleString('en-IN')}`, 'var(--green)');
+
+      // RSI from intraday
+      const closes = res.data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(Boolean) || [];
+      if (closes.length > 14) {
+        const rsi = calcRSI(closes, 14);
+        document.getElementById('nifty-rsi').value = rsi;
+        const rsiCol = rsi > 70 ? 'var(--red)' : rsi < 30 ? 'var(--green)' : 'var(--text2)';
+        add('✅', `RSI(14): ${rsi} ${rsi>70?'— Overbought':rsi<30?'— Oversold':''}`, rsiCol);
+      }
+    }
+  } catch(e) { add('⚠️', 'NIFTY price fetch failed', 'var(--amber)'); }
+
+  // 2. 50 + 200 DMA via 3-month historical
+  try {
+    const url3mo = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=12mo';
+    for (const proxy of PROXIES) {
+      try {
+        const r = await fetch(proxy(url3mo), { signal: AbortSignal.timeout(10000) });
+        const d = await r.json();
+        const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(Boolean) || [];
+        if (closes.length >= 200) {
+          const ma50  = closes.slice(-50).reduce((a,b)=>a+b,0) / 50;
+          const ma200 = closes.slice(-200).reduce((a,b)=>a+b,0) / 200;
+          const curr  = closes[closes.length-1];
+          document.getElementById('nifty-dma50').value  = curr > ma50  ? 'above' : 'below';
+          document.getElementById('nifty-dma200').value = curr > ma200 ? 'above' : 'below';
+          add('✅', `50 DMA: ₹${Math.round(ma50)} (${curr>ma50?'Above ✅':'Below ⚠️'})`, curr>ma50?'var(--green)':'var(--red)');
+          add('✅', `200 DMA: ₹${Math.round(ma200)} (${curr>ma200?'Above ✅':'Below ⚠️'})`, curr>ma200?'var(--green)':'var(--red)');
+          break;
+        }
+      } catch(e) {}
+    }
+  } catch(e) { add('⚠️', 'DMA calculation failed', 'var(--amber)'); }
+
+  // 3. India VIX
+  try {
+    const vixRes = await fetchYahoo('%5EINDIAVIX');
+    if (vixRes) {
+      document.getElementById('nifty-vix').value = vixRes.price.toFixed(2);
+      const vixCol = vixRes.price > 20 ? 'var(--red)' : vixRes.price < 14 ? 'var(--green)' : 'var(--amber)';
+      add('✅', `India VIX: ${vixRes.price.toFixed(2)} ${vixRes.price>20?'— High fear':vixRes.price<14?'— Low fear':''}`, vixCol);
+    }
+  } catch(e) { add('⚠️', 'VIX fetch failed', 'var(--amber)'); }
+
+  // 4. S&P 500
+  try {
+    const spxRes = await fetchYahoo('%5EGSPC');
+    if (spxRes) {
+      const chg = ((spxRes.price - spxRes.prev) / spxRes.prev * 100).toFixed(2);
+      add('✅', `S&P 500: ${chg>0?'+':''}${chg}% — ${chg>0.5?'Positive cue for NIFTY':chg<-0.5?'Negative cue for NIFTY':'Neutral'}`, chg>0.5?'var(--green)':chg<-0.5?'var(--red)':'var(--text2)');
+    }
+  } catch(e) { add('⚠️', 'S&P 500 fetch failed', 'var(--amber)'); }
+
+  // 5. USD/INR
+  try {
+    const usdRes = await fetchYahoo('USDINR%3DX');
+    if (usdRes) {
+      add('✅', `USD/INR: ₹${usdRes.price.toFixed(2)}`, 'var(--text2)');
+    }
+  } catch(e) {}
+
+  // 6. NIFTY stock alignment via Kite
+  const s = getSettings();
+  if (s.bridgeUrl && s.accessToken) {
+    try {
+      const symbols = NIFTY_STOCKS.map(st => st.kite).join(',');
+      const r = await fetch(`${s.bridgeUrl}?action=quotes&symbols=${symbols}&access_token=${s.accessToken}`, { signal: AbortSignal.timeout(12000) });
+      const d = await r.json();
+      if (d.data) {
+        let bull=0, bear=0;
+        NIFTY_STOCKS.forEach(st => {
+          const q = d.data[st.kite];
+          if (q) {
+            const chg = q.net_change || (q.last_price - q.ohlc?.close);
+            const dir = chg > 0.3 ? 1 : chg < -0.3 ? -1 : 0;
+            document.getElementById('s-' + st.id).value = dir;
+            if (dir === 1) bull++; else if (dir === -1) bear++;
+          }
+        });
+        add('✅', `Stocks: ${bull} bullish, ${bear} bearish (auto via Kite)`, bull>bear?'var(--green)':bear>bull?'var(--red)':'var(--text2)');
+      }
+    } catch(e) { add('⚠️', 'Stock alignment via Kite failed — set manually', 'var(--amber)'); }
+  } else {
+    add('ℹ️', 'Stock alignment: Set manually (Kite not connected)', 'var(--text3)');
+  }
+
+  // 7. PCR attempt via Gemini
+  await tryFetchPCR(add);
+
+  btn.innerHTML = '✅ Data Fetched — Now tap Analyse';
+
+  // Auto Gemini news scan
+  scanNewsGemini();
+}
+
+async function tryFetchPCR(add) {
+  const s = getSettings();
+  const key = s.geminiKey || DEFAULT_GEMINI;
+  if (!key) return;
+  try {
+    const prompt = `Go to the NSE India option chain page for NIFTY. The URL is https://www.nseindia.com/option-chain. Find the current PCR (Put-Call Ratio) which is Total Put OI divided by Total Call OI. Return ONLY a single number like 1.23 with no other text. If you cannot access it, return 0.`;
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{ text:prompt }] }] })
+    });
+    const d = await r.json();
+    const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const pcr = parseFloat(txt);
+    if (pcr > 0.3 && pcr < 3) {
+      document.getElementById('nifty-pcr').value = pcr.toFixed(2);
+      const col = pcr > 1.2 ? 'var(--green)' : pcr < 0.8 ? 'var(--red)' : 'var(--amber)';
+      add('✅', `NSE PCR: ${pcr.toFixed(2)} via Gemini ${pcr>1.2?'(Bullish)':pcr<0.8?'(Bearish)':'(Neutral)'}`, col);
+    } else {
+      add('⚠️', 'PCR fetch failed — enter from nseindia.com manually', 'var(--amber)');
+    }
+  } catch(e) { add('⚠️', 'PCR auto-fetch failed — enter manually', 'var(--amber)'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NIFTY 5-LAYER DIRECTION ENGINE
+// ═══════════════════════════════════════════════════════════════
+function analyseNifty() {
+  const price  = parseFloat(document.getElementById('nifty-price').value) || 0;
+  const vix    = parseFloat(document.getElementById('nifty-vix').value)   || 0;
+  const pcr    = parseFloat(document.getElementById('nifty-pcr').value)   || 0;
+  const fii    = parseFloat(document.getElementById('nifty-fii').value)   || 0;
+  const rsi    = parseFloat(document.getElementById('nifty-rsi').value)   || 0;
+  const dma50  = document.getElementById('nifty-dma50').value;
+  const dma200 = document.getElementById('nifty-dma200').value;
+  const move   = parseFloat(document.getElementById('nifty-move').value)  || 0;
+  const vol    = parseInt(document.getElementById('nifty-vol').value)     || 1;
+
+  // Stock alignment score (weighted)
+  let stockScore = 0;
+  NIFTY_STOCKS.forEach(st => {
+    const v = parseInt(document.getElementById('s-' + st.id).value) || 0;
+    stockScore += v * st.weight * 100;
+  });
+  const bullStocks = NIFTY_STOCKS.filter(st => parseInt(document.getElementById('s-'+st.id).value) === 1).length;
+  const bearStocks = NIFTY_STOCKS.filter(st => parseInt(document.getElementById('s-'+st.id).value) === -1).length;
+
+  // ══ LAYER 1: GLOBAL MACRO (20 pts) ══
+  let l1 = 10;
+  if (vix > 30)  { l1 = 0;  }  // extreme fear — block CE entirely
+  else if (vix > 25) { l1 = 3; } // very high fear
+  else if (vix > 20) l1 -= 4;
+  else if (vix > 16) l1 -= 2;
+  else if (vix < 13) l1 += 4;
+  else if (vix < 15) l1 += 2;
+  l1 = Math.max(0, Math.min(20, l1));
+
+  // ══ LAYER 2: STOCK ALIGNMENT (25 pts) ══
+  let l2 = 12.5 + (stockScore * 0.125);
+  l2 = Math.max(0, Math.min(25, Math.round(l2)));
+
+  // ══ LAYER 3: TECHNICALS (25 pts) ══
+  let l3 = 12;
+  // RSI
+  if      (rsi > 75) l3 -= 7;
+  else if (rsi > 65) l3 -= 3;
+  else if (rsi > 55) l3 += 3;
+  else if (rsi < 25) l3 += 7;
+  else if (rsi < 35) l3 += 3;
+  else if (rsi < 45) l3 -= 3;
+  // DMA
+  if (dma50  === 'above') l3 += 3; else l3 -= 3;
+  if (dma200 === 'above') l3 += 2; else l3 -= 2;
+  l3 = Math.max(0, Math.min(25, Math.round(l3)));
+
+  // ══ LAYER 4: OPTION CHAIN PCR (20 pts) ══
+  let l4 = 10;
+  if (pcr > 0) {
+    if      (pcr > 1.4) l4 += 9;
+    else if (pcr > 1.2) l4 += 6;
+    else if (pcr > 1.0) l4 += 3;
+    else if (pcr < 0.65) l4 -= 9;
+    else if (pcr < 0.8)  l4 -= 6;
+    else if (pcr < 0.9)  l4 -= 3;
+  }
+  l4 = Math.max(0, Math.min(20, Math.round(l4)));
+
+  // ══ LAYER 5: FII/DII + VIX (10 pts) ══
+  let l5 = 5;
+  if (fii !== 0) {
+    if      (fii >  3000) l5 += 4;
+    else if (fii >  1000) l5 += 2;
+    else if (fii >     0) l5 += 1;
+    else if (fii < -3000) l5 -= 4;
+    else if (fii < -1000) l5 -= 2;
+    else if (fii <     0) l5 -= 1;
+  }
+  l5 = Math.max(0, Math.min(10, Math.round(l5)));
+
+  let total = l1 + l2 + l3 + l4 + l5;
+
+  // ══ MOMENTUM EXHAUSTION (OVERRIDE) ══
+  let exhaustion = false, exhaustDir = '', exhaustReasons = [];
+  const absMove = Math.abs(move);
+  if (absMove >= 250) {
+    if (absMove >= 400) exhaustReasons.push(`Nifty moved ${move>0?'+':''}${move} pts — extreme extension`);
+    else exhaustReasons.push(`Nifty moved ${move>0?'+':''}${move} pts — large single-day move`);
+    if (rsi > 0 && move > 0 && rsi > 67) exhaustReasons.push(`RSI ${rsi} overbought on up move — reversal signal`);
+    if (rsi > 0 && move < 0 && rsi < 33) exhaustReasons.push(`RSI ${rsi} oversold on down move — bounce likely`);
+    if (vol >= 2 && move > 0) exhaustReasons.push(`High volume ${vol}x on up move — possible climax buying`);
+    if (pcr > 0 && move > 0 && pcr < 0.8) exhaustReasons.push(`PCR ${pcr.toFixed(2)} falling as Nifty rises — institutions buying puts`);
+    if (pcr > 0 && move > 0 && pcr > 1.3) exhaustReasons.push(`PCR ${pcr.toFixed(2)} high — smart money already hedged`);
+    if (exhaustReasons.length >= 2) {
+      exhaustion = true;
+      exhaustDir = move > 0 ? 'PE' : 'CE';
+      // Adjust score toward exhaustion direction
+      if (move > 0) total = Math.min(total, 40);  // cap bullish reading
+      else          total = Math.max(total, 60);  // floor bearish reading
+    }
+  }
+
+  // ══ DETERMINE SIGNAL ══
+  let dir, label, sub;
+  let vixWarning = '';
+  let scalepMode = false;
+
+  if (vix > 30) {
+    dir = 'block'; label = '🚫 NO TRADE TODAY'; sub = `India VIX ${vix} — Extreme danger zone. Stay out completely.`;
+  } else {
+    // VIX 22-30 = SCALP MODE (40-60 pts, ATM only, tight SL)
+    if (vix > 22) {
+      scalepMode = true;
+      vixWarning = `⚠️ VIX ${vix} HIGH — SCALP MODE ONLY. ATM options, target 40-60 pts, exit fast.`;
+    }
+    if (total >= 75) {
+      dir = 'ce'; label = scalepMode ? '⬆ SCALP CE (40-60pts)' : '⬆ STRONG BUY CE';
+      sub = `Score ${total}/100 — ${scalepMode ? 'High VIX — scalp only, ATM strike, quick exit' : 'Strong bullish alignment across all layers'}`;
+    } else if (total >= 60) {
+      dir = 'ce'; label = scalepMode ? '⬆ SCALP CE' : '⬆ BUY CE';
+      sub = `Score ${total}/100 — ${scalepMode ? 'High VIX — ATM only, 40pt target' : 'Bullish bias confirmed'}`;
+    } else if (total >= 42 && total <= 58) {
+      dir = 'wait'; label = '↔ WAIT — No Trade'; sub = `Score ${total}/100 — Mixed signals, no clear edge`;
+    } else if (total >= 25) {
+      dir = 'pe'; label = scalepMode ? '⬇ SCALP PE' : '⬇ BUY PE';
+      sub = `Score ${total}/100 — ${scalepMode ? 'High VIX — ATM only, 40pt target' : 'Bearish bias confirmed'}`;
+    } else {
+      dir = 'pe'; label = scalepMode ? '⬇ SCALP PE (40-60pts)' : '⬇ STRONG BUY PE';
+      sub = `Score ${total}/100 — ${scalepMode ? 'High VIX — scalp only, ATM strike, quick exit' : 'Strong bearish alignment'}`;
+    }
+  }
+
+  const conf = (total >= 70 || total <= 30) ? 'HIGH' : (total >= 60 || total <= 40) ? 'MEDIUM' : 'LOW';
+
+  document.getElementById('nifty-result').classList.add('show');
+
+  // Signal box
+  document.getElementById('nifty-signal-box').innerHTML = `
+    <div class="signal-box ${dir}">
+      <div class="signal-dir ${dir}">${label}</div>
+      <div class="signal-sub">${sub}</div>
+      <div style="margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+        <span class="conf-badge conf-${conf.toLowerCase()}">${conf} CONFIDENCE</span>
+        ${exhaustion ? `<span class="conf-badge" style="background:rgba(255,119,0,0.15);color:var(--orange);border:1px solid rgba(255,119,0,0.3);">⚡ EXHAUSTION: BUY ${exhaustDir}</span>` : ''}
+        ${scalepMode ? `<span class="conf-badge" style="background:rgba(255,184,0,0.15);color:var(--amber);border:1px solid rgba(255,184,0,0.3);">⚡ SCALP MODE</span>` : ''}
+      </div>
+    </div>
+    ${vixWarning ? `<div style="background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.3);border-radius:10px;padding:12px;margin-top:8px;font-size:13px;color:var(--amber);">${vixWarning}</div>` : ''}
+    ${scalepMode ? `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-top:8px;">
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;">⚡ SCALP MODE RULES (High VIX Day)</div>
+      <table class="data-table">
+        <tr><td>Strike</td><td style="color:var(--green);">ATM only — closest to current NIFTY</td></tr>
+        <tr><td>Target</td><td style="color:var(--green);">40-60 points — exit fast, don't be greedy</td></tr>
+        <tr><td>Stop Loss</td><td style="color:var(--red);">20-25 points — tighter than normal</td></tr>
+        <tr><td>Hold time</td><td style="color:var(--amber);">Max 30-45 minutes — no overnight</td></tr>
+        <tr><td>Position size</td><td style="color:var(--amber);">Half normal capital — VIX is high</td></tr>
+        <tr><td>Expiry</td><td style="color:var(--blue);">Current week — not monthly</td></tr>
+      </table>
+    </div>` : ''}`;
+
+  // Exhaustion detail
+  if (exhaustion) {
+    document.getElementById('nifty-exhaustion-box').innerHTML = `
+      <div class="exhaustion-alert">
+        <div class="exhaustion-title">⚡ Momentum Exhaustion — Your Hunch Confirmed</div>
+        <div class="exhaustion-body">${exhaustReasons.map(r=>`• ${r}`).join('<br>')}</div>
+        <div style="margin-top:10px;font-size:14px;font-weight:700;color:var(--orange);">Signal: BUY ${exhaustDir} — Wait for reversal candle confirmation first</div>
+      </div>`;
+  } else {
+    document.getElementById('nifty-exhaustion-box').innerHTML = '';
+  }
+
+  // Score display
+  const sc = total >= 65 ? 'var(--green)' : total <= 35 ? 'var(--red)' : 'var(--amber)';
+  document.getElementById('nifty-score-display').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div>
+        <div style="font-size:11px;color:var(--text3);">DIRECTION SCORE</div>
+        <div style="font-size:11px;color:var(--text3);">0 = Strong PE · 50 = Neutral · 100 = Strong CE</div>
+      </div>
+      <div class="score-number" style="color:${sc};">${total}</div>
+    </div>
+    <div class="score-bar-bg">
+      <div class="score-bar-fill" style="width:${total}%;background:${sc};"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px;">
+      <span>Strong PE &lt;30</span><span>Wait 42-58</span><span>Strong CE &gt;70</span>
+    </div>
+    <table class="data-table" style="margin-top:12px;">
+      <tr><td>Bullish stocks (${bullStocks}/10)</td><td style="color:var(--green);">${bullStocks >= 7 ? 'Strong alignment ✅' : bullStocks >= 5 ? 'Moderate' : 'Weak'}</td></tr>
+      <tr><td>India VIX</td><td style="color:${vix>20?'var(--red)':'var(--green)'};">${vix||'—'} ${vix>20?'High fear':vix>0&&vix<15?'Low fear':''}</td></tr>
+      <tr><td>PCR</td><td style="color:${pcr>1.2?'var(--green)':pcr>0&&pcr<0.8?'var(--red)':'var(--amber)'};">${pcr||'—'} ${pcr>1.2?'Bullish':pcr>0&&pcr<0.8?'Bearish':''}</td></tr>
+      <tr><td>RSI(14)</td><td style="color:${rsi>70?'var(--red)':rsi>0&&rsi<30?'var(--green)':'var(--text2)'};">${rsi||'—'} ${rsi>70?'Overbought':rsi>0&&rsi<30?'Oversold':''}</td></tr>
+    </table>`;
+
+  // Layer breakdown
+  const layers = [
+    { name:'L1 — Global Macro',     score:l1, max:20, color:'var(--blue)' },
+    { name:'L2 — Stock Alignment',  score:l2, max:25, color:'var(--green)' },
+    { name:'L3 — Technicals',       score:l3, max:25, color:'var(--purple)' },
+    { name:'L4 — Option Chain PCR', score:l4, max:20, color:'var(--amber)' },
+    { name:'L5 — FII + VIX',        score:l5, max:10, color:'var(--orange)' }
+  ];
+  document.getElementById('nifty-layers').innerHTML = layers.map(l => `
+    <div class="layer-row">
+      <div class="layer-name">${l.name}</div>
+      <div class="layer-track"><div class="layer-fill" style="width:${l.score/l.max*100}%;background:${l.color};"></div></div>
+      <div class="layer-pts" style="color:${l.color};">${l.score}/${l.max}</div>
+    </div>`).join('');
+
+    // AUTO TELEGRAM if HIGH — fires when signal or score changes significantly
+  if (conf === 'HIGH') {
+    const lastNiftySignal = localStorage.getItem('last_nifty_signal') || '';
+    const newNiftySignal  = dir + '_' + Math.round(total / 10);
+    if (newNiftySignal !== lastNiftySignal) {
+      localStorage.setItem('last_nifty_signal', newNiftySignal);
+      const tMsg = `🎯 <b>NIFTY Signal — HIGH Confidence</b>\n\n${label}\nScore: ${total}/100\n\nL1: ${l1}/20 · L2: ${l2}/25 · L3: ${l3}/25 · L4: ${l4}/20 · L5: ${l5}/10\n\nVIX: ${vix||'—'} · RSI: ${rsi||'—'} · PCR: ${pcr||'—'}${exhaustion?'\n\n⚡ EXHAUSTION: BUY '+exhaustDir:''}\n\n⚠️ Wait for confirmation. React, don't predict.`;
+      sendTelegram(tMsg);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GEMINI AI NEWS SCAN
+// ═══════════════════════════════════════════════════════════════
+async function scanNewsGemini(silent) {
+  const s   = getSettings();
+  const key = s.geminiKey || DEFAULT_GEMINI;
+  const el  = document.getElementById('nifty-gemini-card');
+  if (!key) {
+    el.innerHTML = '<div class="status-box warn">⚠️ Add Gemini API key in Settings to enable AI news scan.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="card"><div class="card-title">🤖 Gemini AI — Scanning News...</div><div class="loading"><span class="spinner"></span>Analysing global events...</div></div>';
+
+  const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const prompt = `Today is ${today}. You are a trading signal assistant for an Indian retail options trader.
+
+Analyse current global and Indian market conditions RIGHT NOW and answer precisely:
+
+1. Is there any major market-moving event TODAY that makes NIFTY options trading HIGH RISK? (RBI/Fed policy, Union Budget, election results, US NFP data, major geopolitical crisis)
+2. Global sentiment: BULLISH / BEARISH / NEUTRAL
+3. NIFTY expected bias: UP / DOWN / SIDEWAYS  
+4. Most important news affecting NIFTY today (2-3 lines max)
+5. Should Rohit trade options today? YES / NO / CAUTION
+
+Respond in EXACTLY this format (no extra text):
+BLOCK: YES or NO
+BLOCK_REASON: [reason or "Clear to trade"]
+SENTIMENT: BULLISH or BEARISH or NEUTRAL
+NIFTY_BIAS: UP or DOWN or SIDEWAYS
+NEWS: [2-3 lines of key news]
+TRADE_TODAY: YES or NO or CAUTION
+CONFIDENCE: HIGH or MEDIUM or LOW`;
+
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d = await r.json();
+    const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    const block      = /BLOCK:\s*(YES|NO)/i.exec(txt)?.[1] || 'NO';
+    const blockReason= /BLOCK_REASON:\s*(.+)/i.exec(txt)?.[1]?.trim() || '';
+    const sentiment  = /SENTIMENT:\s*(\w+)/i.exec(txt)?.[1] || 'NEUTRAL';
+    const bias       = /NIFTY_BIAS:\s*(\w+)/i.exec(txt)?.[1] || 'SIDEWAYS';
+    const news       = /NEWS:\s*([\s\S]+?)(?=\nTRADE_TODAY|$)/i.exec(txt)?.[1]?.trim() || '';
+    const tradeToday = /TRADE_TODAY:\s*(\w+)/i.exec(txt)?.[1] || 'CAUTION';
+    const aiConf     = /CONFIDENCE:\s*(\w+)/i.exec(txt)?.[1] || 'MEDIUM';
+
+    const sentCol  = sentiment === 'BULLISH' ? 'var(--green)' : sentiment === 'BEARISH' ? 'var(--red)' : 'var(--amber)';
+    const biasCol  = bias === 'UP' ? 'var(--green)' : bias === 'DOWN' ? 'var(--red)' : 'var(--amber)';
+    const tradeCol = tradeToday === 'YES' ? 'var(--green)' : tradeToday === 'NO' ? 'var(--red)' : 'var(--amber)';
+
+    if (block === 'YES') {
+      if (!silent) {
+        document.getElementById('nifty-event-banner').innerHTML = `
+          <div style="background:var(--red-bg);border:2px solid var(--red-border);border-radius:var(--r2);padding:14px;margin-bottom:12px;">
+            <div style="font-size:16px;font-weight:700;color:var(--red);">🚨 TRADE BLOCKED — MAJOR EVENT</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">${blockReason}</div>
+          </div>`;
+      }
+      // Always send Telegram for block events even in silent mode
+      const lastBlock = localStorage.getItem('last_block_reason') || '';
+      if (blockReason !== lastBlock) {
+        localStorage.setItem('last_block_reason', blockReason);
+        sendTelegram(\`🚨 <b>TRADE BLOCKED — MAJOR EVENT</b>\n\n\${blockReason}\n\nDo not trade NIFTY options today.\`);
+      }
+    } else {
+      if (!silent) document.getElementById('nifty-event-banner').innerHTML = '';
+    }
+
+    if (!silent && el) el.innerHTML = `
+      <div class="card">
+        <div class="card-title">🤖 Gemini AI — News & Market Scan</div>
+        <div class="metric-grid-3">
+          <div class="metric"><div class="metric-label">Sentiment</div><div class="metric-val" style="font-size:15px;color:${sentCol};">${sentiment}</div></div>
+          <div class="metric"><div class="metric-label">NIFTY Bias</div><div class="metric-val" style="font-size:15px;color:${biasCol};">${bias}</div></div>
+          <div class="metric"><div class="metric-label">Trade Today?</div><div class="metric-val" style="font-size:15px;color:${tradeCol};">${tradeToday}</div></div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r);padding:12px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;">${news}</div>
+        ${block === 'YES' ? `<div style="padding:10px;background:var(--red-bg);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--red);">⛔ ${blockReason}</div>` : '<div style="font-size:12px;color:var(--green);">✅ No major blocking event detected today</div>'}
+      </div>`;
+  } catch(e) {
+    if (!silent && el) el.innerHTML = `<div class="card"><div class="card-title">🤖 Gemini AI</div><div class="status-box error">❌ Scan failed: ${e.message}</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NIFTY POSITIONAL P&L
+// ═══════════════════════════════════════════════════════════════
+function calcNiftyPos() {
+  const entry   = parseFloat(document.getElementById('np-entry').value);
+  const current = parseFloat(document.getElementById('np-current').value);
+  const lots    = parseInt(document.getElementById('np-lots').value)  || 1;
+  const dte     = parseInt(document.getElementById('np-dte').value)   || 60;
+
+  if (!entry || !current) { alert('Enter entry and current premium'); return; }
+
+  const pnl    = (current - entry) * NIFTY_LOT_SIZE * lots;
+  const charges= NIFTY_CHARGES_PER_LOT * lots;
+  const net    = pnl - charges;
+  const pct    = ((current - entry) / entry * 100).toFixed(1);
+  const sl45   = +(entry * (1 - NIFTY_SL_PCT)).toFixed(0);
+  const t2x    = +(entry * 2).toFixed(0);
+  const t3x    = +(entry * 3).toFixed(0);
+  const theta  = +(entry * 0.025).toFixed(1); // ~2.5%/day for 3-month
+  const sl45Hit= current <= sl45;
+
+  document.getElementById('nifty-pos-result').classList.add('show');
+  const col = net >= 0 ? 'green' : 'red';
+
+  document.getElementById('np-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Net P&L</div><div class="metric-val ${col}">₹${net.toFixed(0)}</div></div>
+    <div class="metric"><div class="metric-label">Return %</div><div class="metric-val ${col}">${pct}%</div></div>
+    <div class="metric"><div class="metric-label">Current Premium</div><div class="metric-val white">₹${current}</div></div>
+    <div class="metric"><div class="metric-label">Theta/day</div><div class="metric-val amber">₹${(theta*lots*NIFTY_LOT_SIZE).toFixed(0)}</div></div>`;
+
+  document.getElementById('np-sl-card').innerHTML = `
+    <div class="card">
+      <div class="card-title" style="color:${sl45Hit?'var(--red)':''}">Stop Loss — 45% Rule (Positional) ${sl45Hit?'🚨 SL HIT':''}</div>
+      <div style="padding:14px;background:${sl45Hit?'var(--red-bg)':'var(--bg3)'};border:1px solid ${sl45Hit?'var(--red-border)':'var(--border)'};border-radius:var(--r);">
+        <div style="font-size:11px;color:var(--text3);">45% SL — EXIT LEVEL</div>
+        <div style="font-size:32px;font-weight:700;color:var(--red);font-family:var(--mono);">₹${sl45}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">Positional needs 45% (not 30%) — daily swings are normal with 3-month expiry</div>
+      </div>
+    </div>`;
+
+  document.getElementById('np-target-card').innerHTML = `
+    <div class="card">
+      <div class="card-title">Profit Targets</div>
+      <table class="data-table">
+        <tr><td>2× Target (first exit)</td><td style="color:var(--green);">₹${t2x} → Profit ₹${((t2x-entry)*NIFTY_LOT_SIZE*lots).toFixed(0)}</td></tr>
+        <tr><td>3× Target (full exit)</td><td style="color:var(--green);">₹${t3x} → Profit ₹${((t3x-entry)*NIFTY_LOT_SIZE*lots).toFixed(0)}</td></tr>
+        <tr><td>Days remaining</td><td>${dte} days</td></tr>
+        <tr><td>Total theta remaining</td><td style="color:var(--orange);">₹${(theta*dte*lots*NIFTY_LOT_SIZE).toFixed(0)}</td></tr>
+        <tr><td>Capital at 45% SL risk</td><td style="color:var(--amber);">₹${(entry*NIFTY_SL_PCT*NIFTY_LOT_SIZE*lots).toFixed(0)}</td></tr>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KEY LEVELS
+// ═══════════════════════════════════════════════════════════════
+function getLevels() { return JSON.parse(localStorage.getItem(LEVELS_KEY) || '[]'); }
+
+function addLevel() {
+  const v = parseFloat(document.getElementById('new-level').value);
+  if (!v) return;
+  const arr = getLevels();
+  if (!arr.includes(v)) { arr.push(v); arr.sort((a,b) => a-b); localStorage.setItem(LEVELS_KEY, JSON.stringify(arr)); }
+  document.getElementById('new-level').value = '';
+  renderLevels();
+}
+
+function removeLevel(v) {
+  localStorage.setItem(LEVELS_KEY, JSON.stringify(getLevels().filter(l => l !== v)));
+  renderLevels();
+}
+
+function renderLevels() {
+  const arr = getLevels();
+  const nifty = parseFloat(document.getElementById('nifty-price').value) || 0;
+  const el = document.getElementById('levels-list');
+  if (!arr.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0;">No key levels saved. Add round numbers and swing highs/lows.</div>'; return; }
+  el.innerHTML = arr.map(l => {
+    const dist  = nifty ? Math.round(Math.abs(nifty - l)) : null;
+    const close = dist !== null && dist < 150;
+    return `<div class="level-item">
+      <div>
+        <div class="level-val" style="color:${close?'var(--amber)':'var(--text)'};">₹${l.toLocaleString('en-IN')}</div>
+        ${dist !== null ? `<div class="level-dist" style="color:${close?'var(--amber)':'var(--text3)'};">${close?'⚠️ ':''}${dist} pts away</div>` : ''}
+      </div>
+      <button onclick="removeLevel(${l})" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px 8px;">×</button>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GO / NO-GO CHECKLIST
+// ═══════════════════════════════════════════════════════════════
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  el.querySelector('.check-box').innerHTML = el.classList.contains('checked') ? '✓' : '';
+  updateGoNoGo();
+}
+
+function updateGoNoGo() {
+  const all     = document.querySelectorAll('#gonogo-list .check-item');
+  const checked = document.querySelectorAll('#gonogo-list .check-item.checked').length;
+  const total   = all.length;
+  const el      = document.getElementById('gonogo-verdict');
+
+  if (checked === total) {
+    el.innerHTML = `<div style="background:var(--green-bg);border:2px solid var(--green-border);border-radius:var(--r2);padding:16px;text-align:center;"><div style="font-size:26px;font-weight:900;color:var(--green);">✅ GO — ALL ${total} CHECKS PASSED</div><div style="font-size:13px;color:var(--text2);margin-top:4px;">All conditions met. Proceed with trade entry.</div></div>`;
+  } else if (checked >= total - 1) {
+    el.innerHTML = `<div style="background:var(--amber-bg);border:2px solid var(--amber-border);border-radius:var(--r2);padding:16px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--amber);">⚠️ ALMOST — ${checked}/${total} PASSED</div><div style="font-size:13px;color:var(--text2);margin-top:4px;">Check remaining condition before entering.</div></div>`;
+  } else {
+    el.innerHTML = `<div style="background:var(--red-bg);border:2px solid var(--red-border);border-radius:var(--r2);padding:16px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--red);">❌ NO-GO — ${checked}/${total} PASSED</div><div style="font-size:13px;color:var(--text2);margin-top:4px;">Do not trade. Complete all checks first.</div></div>`;
+  }
+}
+
+function resetChecklist() {
+  document.querySelectorAll('#gonogo-list .check-item').forEach(el => {
+    el.classList.remove('checked');
+    el.querySelector('.check-box').innerHTML = '';
+  });
+  document.getElementById('gonogo-verdict').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALARM SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function fireAlarm(type) {
+  document.getElementById('alarm-' + type).classList.add('active');
+  playAlarm();
+  if (navigator.vibrate) navigator.vibrate([600, 200, 600, 200, 600, 200, 1000]);
+  // Telegram alarm
+  const msg = type === 'sl30'
+    ? `🚨 <b>MCX SL ALARM — 30% HIT</b>\n\nYour stop loss has been triggered.\nPremium dropped 30% from entry.\n\n⚠️ EXIT THE TRADE IMMEDIATELY\nOpen Zerodha Kite and square off.`
+    : `🆘 <b>MCX EMERGENCY — 50% GAP DOWN</b>\n\nPremium dropped 50%.\nPossible overnight gap or crash.\n\n⚠️ EMERGENCY EXIT REQUIRED\nOpen Zerodha Kite NOW.`;
+  sendTelegram(msg);
+}
+
+function dismissAlarm(type) {
+  document.getElementById('alarm-' + type).classList.remove('active');
+}
+
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const play = (freq, start, dur) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      o.type = 'square';
+      g.gain.setValueAtTime(0.25, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur);
+    };
+    [0, 0.5, 1.0, 1.5, 2.0].forEach(t => {
+      play(880, t, 0.35);
+      play(1100, t + 0.35, 0.15);
+    });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BRIDGE TEST
+// ═══════════════════════════════════════════════════════════════
+async function testBridge() {
+  const s = getSettings();
+  const url = s.bridgeUrl || document.getElementById('set-bridge-url').value;
+  if (!url) { alert('Add Bridge URL first'); return; }
+  try {
+    const r = await fetch(url + '?action=test', { signal: AbortSignal.timeout(8000) });
+    const d = await r.json();
+    alert('✅ Bridge working!\n' + JSON.stringify(d, null, 2));
+  } catch(e) { alert('❌ Bridge failed: ' + e.message); }
+}
+
+function openKiteLogin() {
+  const s = getSettings();
+  const url = s.bridgeUrl || document.getElementById('set-bridge-url').value;
+  if (!url) { alert('Add Bridge URL in Settings first'); return; }
+  window.open(url + '?action=login', '_blank');
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO-FILL MOMENTUM TAB DATA
+// ═══════════════════════════════════════════════════════════════
+async function autoFillMomentumData() {
+  // Show loading state
+  document.getElementById('mf-verdict').innerHTML = 
+    '<div class="loading"><span class="spinner"></span>Auto-fetching NIFTY data...</div>';
+
+  try {
+    // 1. Get today + yesterday NIFTY prices
+    const url2d = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=5d';
+    let prevClose = 0, todayPrice = 0, todayVol = 0, avgVol = 0;
+
+    for (const proxy of PROXIES) {
+      try {
+        const r = await fetch(proxy(url2d), { signal: AbortSignal.timeout(8000) });
+        const d = await r.json();
+        const result = d?.chart?.result?.[0];
+        if (result) {
+          const closes  = result.indicators.quote[0].close.filter(Boolean);
+          const volumes = result.indicators.quote[0].volume.filter(Boolean);
+          if (closes.length >= 2) {
+            prevClose  = Math.round(closes[closes.length - 2]);
+            todayPrice = Math.round(closes[closes.length - 1]);
+            todayVol   = volumes[volumes.length - 1] || 0;
+            avgVol     = volumes.slice(-5).reduce((a,b)=>a+b,0) / Math.min(5, volumes.length);
+            break;
+          }
+        }
+      } catch(e) {}
+    }
+
+    // 2. Get intraday data for RSI + candle direction
+    const urlIntra = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=15m&range=1d';
+    let rsi = 0, candleDir = 'mixed';
+
+    for (const proxy of PROXIES) {
+      try {
+        const r = await fetch(proxy(urlIntra), { signal: AbortSignal.timeout(8000) });
+        const d = await r.json();
+        const result = d?.chart?.result?.[0];
+        if (result) {
+          const closes = result.indicators.quote[0].close.filter(Boolean);
+          const opens  = result.indicators.quote[0].open.filter(Boolean);
+
+          // Calculate RSI
+          if (closes.length >= 14) rsi = calcRSI(closes, 14);
+
+          // Detect last 3 candle direction
+          if (closes.length >= 3 && opens.length >= 3) {
+            const last3 = closes.slice(-3).map((c, i) => c > opens[opens.length-3+i] ? 'green' : 'red');
+            if (last3.every(c => c === 'red'))   candleDir = 'down3';
+            else if (last3.every(c => c === 'green')) candleDir = 'up3';
+            else if (last3.slice(-2).every(c => c === 'red'))  candleDir = 'down2';
+            else if (last3.slice(-2).every(c => c === 'green')) candleDir = 'up2';
+            else candleDir = 'mixed';
+          }
+          break;
+        }
+      } catch(e) {}
+    }
+
+    // 3. Get VIX
+    let vix = 0;
+    const vixRes = await fetchYahoo('%5EINDIAVIX');
+    if (vixRes) vix = vixRes.price;
+
+    // 4. Fill all fields
+    if (prevClose)  document.getElementById('mf-prev-close').value = prevClose;
+    if (todayPrice) document.getElementById('mf-current').value = todayPrice;
+    if (rsi)        document.getElementById('mf-rsi').value = rsi.toFixed(1);
+    if (vix)        document.getElementById('mf-vix').value = vix.toFixed(2);
+
+    // Volume ratio
+    const volRatio = avgVol > 0 ? todayVol / avgVol : 1;
+    const volEl = document.getElementById('mf-vol');
+    if      (volRatio >= 2.5) volEl.value = '3';
+    else if (volRatio >= 1.5) volEl.value = '2';
+    else if (volRatio >= 0.7) volEl.value = '1';
+    else                      volEl.value = '0.5';
+
+    // Candle direction
+    document.getElementById('mf-candle').value = candleDir;
+
+    // Auto-trigger analysis
+    calcMomentum();
+
+  } catch(e) {
+    document.getElementById('mf-verdict').innerHTML = 
+      '<div class="status-box warn">⚠️ Auto-fetch failed. Fill manually.</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRADE WITH FLOW — MOMENTUM TRACKER
+// ═══════════════════════════════════════════════════════════════
+
+function calcMomentum() {
+  const prevClose = parseFloat(document.getElementById('mf-prev-close').value) || 0;
+  const current   = parseFloat(document.getElementById('mf-current').value) || 0;
+  const rsi       = parseFloat(document.getElementById('mf-rsi').value) || 0;
+  const vol       = parseFloat(document.getElementById('mf-vol').value) || 1;
+  const candle    = document.getElementById('mf-candle').value;
+  const vix       = parseFloat(document.getElementById('mf-vix').value) || 0;
+
+  if (!prevClose || !current) return;
+
+  const move     = current - prevClose;
+  const movePct  = (move / prevClose * 100).toFixed(2);
+  const absMove  = Math.abs(move);
+  const dir      = move < 0 ? 'PE' : 'CE';
+  const dirLabel = move < 0 ? '📉 FALLING' : '📈 RISING';
+  const dirColor = move < 0 ? 'var(--red)' : 'var(--green)';
+
+  // ── MOMENTUM SCORE (0-100) ──
+  let score = 0;
+  let reasons = [];
+
+  // Move size (40 pts)
+  if (absMove >= 300)      { score += 40; reasons.push('✅ Move ' + Math.round(absMove) + 'pts — Very strong momentum'); }
+  else if (absMove >= 200) { score += 30; reasons.push('✅ Move ' + Math.round(absMove) + 'pts — Strong momentum'); }
+  else if (absMove >= 150) { score += 20; reasons.push('✅ Move ' + Math.round(absMove) + 'pts — Good momentum'); }
+  else if (absMove >= 100) { score += 10; reasons.push('⚠️ Move ' + Math.round(absMove) + 'pts — Weak, wait for 150+'); }
+  else                     { score += 0;  reasons.push('❌ Move ' + Math.round(absMove) + 'pts — Too small, NO TRADE'); }
+
+  // Volume (20 pts)
+  if (vol >= 3)      { score += 20; reasons.push('✅ Volume 3x+ — Institutional momentum confirmed'); }
+  else if (vol >= 2) { score += 14; reasons.push('✅ Volume 2x — Good confirmation'); }
+  else if (vol >= 1) { score += 7;  reasons.push('⚠️ Normal volume — Weak confirmation'); }
+  else               { score += 0;  reasons.push('❌ Low volume — Suspect move, be careful'); }
+
+  // RSI (20 pts)
+  if (dir === 'PE') {
+    if (rsi > 0 && rsi <= 35)      { score += 20; reasons.push('✅ RSI ' + rsi + ' — Oversold, PE momentum strong'); }
+    else if (rsi <= 45)             { score += 14; reasons.push('✅ RSI ' + rsi + ' — Bearish momentum zone'); }
+    else if (rsi <= 55)             { score += 7;  reasons.push('⚠️ RSI ' + rsi + ' — Neutral, wait for more fall'); }
+    else                            { score += 0;  reasons.push('❌ RSI ' + rsi + ' — Too high for PE entry'); }
+  } else {
+    if (rsi > 0 && rsi >= 65)      { score += 20; reasons.push('✅ RSI ' + rsi + ' — Overbought, CE momentum strong'); }
+    else if (rsi >= 55)             { score += 14; reasons.push('✅ RSI ' + rsi + ' — Bullish momentum zone'); }
+    else if (rsi >= 45)             { score += 7;  reasons.push('⚠️ RSI ' + rsi + ' — Neutral zone'); }
+    else                            { score += 0;  reasons.push('❌ RSI ' + rsi + ' — Too low for CE entry'); }
+  }
+
+  // Candle direction (20 pts)
+  const candleMatch = (dir === 'PE' && (candle === 'down3' || candle === 'down2')) ||
+                      (dir === 'CE' && (candle === 'up3' || candle === 'up2'));
+  if (candle === 'down3' || candle === 'up3')  { score += candleMatch ? 20 : 0; reasons.push(candleMatch ? '✅ 3+ candles confirming direction' : '❌ Candles opposing momentum'); }
+  else if (candle === 'down2' || candle === 'up2') { score += candleMatch ? 12 : 0; reasons.push(candleMatch ? '✅ 2 candles confirming direction' : '⚠️ Candles mixed'); }
+  else { score += 0; reasons.push('⚠️ Mixed candles — wait for clarity'); }
+
+  // Determine verdict
+  let verdict, verdictColor, verdictBg, action;
+  if (absMove < 150) {
+    verdict = '❌ NO TRADE — Move too small';
+    verdictColor = 'var(--text3)';
+    verdictBg = 'var(--bg3)';
+    action = 'Wait for NIFTY to move at least 150 points before considering entry.';
+  } else if (score >= 70) {
+    verdict = '🟢 STRONG MOMENTUM — HIGH CONVICTION ' + dir;
+    verdictColor = 'var(--green)';
+    verdictBg = 'var(--green-bg)';
+    action = 'Wait for pullback zone below. This is a high conviction ' + dir + ' trade.';
+  } else if (score >= 50) {
+    verdict = '🟡 MODERATE MOMENTUM — BUY ' + dir + ' ON PULLBACK';
+    verdictColor = 'var(--amber)';
+    verdictBg = 'var(--amber-bg)';
+    action = 'Momentum present. Wait for pullback to enter at better price.';
+  } else {
+    verdict = '🔴 WEAK MOMENTUM — WAIT';
+    verdictColor = 'var(--red)';
+    verdictBg = 'var(--red-bg)';
+    action = 'Signals are weak. Do not enter yet. Wait for volume and candle confirmation.';
+  }
+
+  // Calculate pullback zone
+  const pullback382 = move < 0
+    ? Math.round(current + absMove * 0.382)  // bounce UP 38.2%
+    : Math.round(current - absMove * 0.382); // dip DOWN 38.2%
+  const pullback50  = move < 0
+    ? Math.round(current + absMove * 0.50)
+    : Math.round(current - absMove * 0.50);
+  const pullback618 = move < 0
+    ? Math.round(current + absMove * 0.618)
+    : Math.round(current - absMove * 0.618);
+
+  // Entry strike (ATM = closest 50-multiple to pullback382)
+  const atmStrike = Math.round(pullback382 / 50) * 50;
+  const otmStrike = move < 0 ? atmStrike - 100 : atmStrike + 100;
+
+  // Next 3-month expiry
+  const now = new Date();
+  const expMonth = new Date(now.getFullYear(), now.getMonth() + 3, 1);
+  const expMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const expLabel = expMonths[expMonth.getMonth()] + ' ' + expMonth.getFullYear() + ' expiry';
+
+  // Render verdict
+  document.getElementById('mf-verdict').innerHTML = `
+    <div style="background:${verdictBg};border:2px solid ${verdictColor};border-radius:14px;padding:18px;margin-bottom:12px;">
+      <div style="font-size:20px;font-weight:900;color:${verdictColor};margin-bottom:8px;">${verdict}</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">${action}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:28px;font-weight:900;font-family:var(--mono);color:${verdictColor};">${score}</span>
+        <div>
+          <div style="font-size:11px;color:var(--text3);">MOMENTUM SCORE</div>
+          <div class="score-bar-bg" style="width:160px;"><div class="score-bar-fill" style="width:${score}%;background:${verdictColor};"></div></div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:22px;font-weight:700;color:${dirColor};">${dirLabel}</div>
+          <div style="font-size:14px;font-family:var(--mono);color:${verdictColor};">${Math.round(absMove)} pts (${movePct}%)</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        ${reasons.map(r => `<div style="font-size:12px;color:var(--text2);">${r}</div>`).join('')}
+      </div>
+    </div>`;
+
+  // Show pullback and entry if momentum is valid
+  if (absMove >= 150 && score >= 50) {
+    document.getElementById('mf-pullback-section').classList.add('show');
+
+    // Pullback display
+    document.getElementById('mf-pullback-display').innerHTML = `
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+        NIFTY ${move < 0 ? 'fell' : 'rose'} ${Math.round(absMove)} points. 
+        Now ${move < 0 ? 'wait for bounce UP' : 'wait for dip DOWN'} to these zones before entering:
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);">38.2% PULLBACK — IDEAL ENTRY</div>
+            <div style="font-size:11px;color:var(--green);margin-top:2px;">Best risk/reward. Enter here if volume drops on bounce.</div>
+          </div>
+          <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--green);">₹${pullback382}</div>
+        </div>
+        <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);">50% PULLBACK — SAFE ENTRY</div>
+            <div style="font-size:11px;color:var(--amber);margin-top:2px;">Deeper pullback = better price. More confirmation.</div>
+          </div>
+          <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--amber);">₹${pullback50}</div>
+        </div>
+        <div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);">61.8% PULLBACK — LAST CHANCE</div>
+            <div style="font-size:11px;color:var(--red);margin-top:2px;">If pullback exceeds this — momentum may be reversing. Skip trade.</div>
+          </div>
+          <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--red);">₹${pullback618}</div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:12px;color:var(--text3);">
+        💡 How to use: Watch NIFTY on 5-min chart. When it bounces to ₹${pullback382}–₹${pullback50} zone AND a reversal candle forms pointing back in original direction → ENTER
+      </div>`;
+
+    // Entry signal
+    document.getElementById('mf-entry-display').innerHTML = `
+      <table class="data-table" style="margin-bottom:12px;">
+        <tr><td>Option to buy</td><td style="color:${move<0?'var(--red)':'var(--green)'};font-weight:700;">BUY ${dir}</td></tr>
+        <tr><td>ATM Strike (safest)</td><td style="color:var(--green);">₹${atmStrike} ${dir}</td></tr>
+        <tr><td>OTM Strike (more leverage)</td><td style="color:var(--amber);">₹${otmStrike} ${dir}</td></tr>
+        <tr><td>Expiry to buy</td><td style="color:var(--blue);">${expLabel} (3 months)</td></tr>
+        <tr><td>Entry timing</td><td>When NIFTY reaches pullback zone ₹${pullback382}–₹${pullback50}</td></tr>
+        <tr><td>Confirmation needed</td><td>Reversal candle on 5-min chart at pullback zone</td></tr>
+      </table>
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:8px;padding:12px;font-size:13px;color:var(--blue);">
+        📱 After entry → go to Step 4 (Trail SL Manager) and enter your premium to track profit automatically
+      </div>`;
+
+    // Auto fill option type
+    document.getElementById('mf-option-type').value = dir;
+    document.getElementById('mf-strike').value = atmStrike;
+
+  } else {
+    document.getElementById('mf-pullback-section').classList.remove('show');
+  }
+}
+
+function calcTrailSL() {
+  const entryPrem  = parseFloat(document.getElementById('mf-entry-prem').value) || 0;
+  const currentPrem= parseFloat(document.getElementById('mf-current-prem').value) || 0;
+  const lots       = parseInt(document.getElementById('mf-lots').value) || 1;
+  const optType    = document.getElementById('mf-option-type').value;
+
+  if (!entryPrem || !currentPrem) return;
+
+  const profitPts  = currentPrem - entryPrem;
+  const profitRs   = profitPts * 75 * lots;
+  const profitPct  = (profitPts / entryPrem * 100).toFixed(1);
+  const sl45       = +(entryPrem * 0.55).toFixed(0);
+
+  // Trail SL rules
+  let slLevel, slLabel, slColor, action, actionColor;
+  if (profitPts >= 80) {
+    slLevel = +(entryPrem + 60).toFixed(0);
+    slLabel = 'Trail SL to ₹' + slLevel + ' (Lock 60pts profit)';
+    slColor = 'var(--green)';
+    action  = '🎯 You have 80+ pts profit. Lock ₹60 pts. Let remaining run. Consider booking 50% now.';
+    actionColor = 'var(--green)';
+  } else if (profitPts >= 60) {
+    slLevel = +(entryPrem + 40).toFixed(0);
+    slLabel = 'Trail SL to ₹' + slLevel + ' (Lock 40pts profit)';
+    slColor = 'var(--green)';
+    action  = '✅ Move SL to ₹' + slLevel + ' immediately. You cannot make less than 40pts now.';
+    actionColor = 'var(--green)';
+  } else if (profitPts >= 40) {
+    slLevel = +(entryPrem + 20).toFixed(0);
+    slLabel = 'Trail SL to ₹' + slLevel + ' (Lock 20pts profit)';
+    slColor = 'var(--green)';
+    action  = '✅ Move SL to ₹' + slLevel + '. Lock 20pts. Let momentum continue.';
+    actionColor = 'var(--green)';
+  } else if (profitPts >= 20) {
+    slLevel = entryPrem;
+    slLabel = 'Move SL to Breakeven ₹' + slLevel;
+    slColor = 'var(--amber)';
+    action  = '⚡ Move SL to your entry price ₹' + entryPrem + ' NOW. You cannot lose money anymore.';
+    actionColor = 'var(--amber)';
+  } else if (profitPts > 0) {
+    slLevel = sl45;
+    slLabel = 'Hold — SL at ₹' + slLevel + ' (45% original SL)';
+    slColor = 'var(--amber)';
+    action  = '⏳ Profit building. Hold position. SL stays at 45% level.';
+    actionColor = 'var(--amber)';
+  } else if (profitPts > -entryPrem * 0.25) {
+    slLevel = sl45;
+    slLabel = '⚠️ In loss — SL at ₹' + slLevel;
+    slColor = 'var(--orange)';
+    action  = '⚠️ Small loss. Hold if structure intact. Exit if SL ₹' + slLevel + ' is hit.';
+    actionColor = 'var(--orange)';
+  } else {
+    slLevel = sl45;
+    slLabel = '🚨 SL HIT — EXIT NOW';
+    slColor = 'var(--red)';
+    action  = '🚨 45% SL breached. EXIT TRADE IMMEDIATELY. Open Kite and square off.';
+    actionColor = 'var(--red)';
+  }
+
+  const pnlColor = profitRs >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('mf-trail-display').innerHTML = `
+    <div class="metric-grid" style="margin-top:12px;">
+      <div class="metric"><div class="metric-label">Current P&L</div><div class="metric-val" style="color:${pnlColor};">₹${profitRs.toFixed(0)}</div></div>
+      <div class="metric"><div class="metric-label">Premium Change</div><div class="metric-val" style="color:${pnlColor};">${profitPts > 0 ? '+' : ''}${profitPts.toFixed(0)} pts</div></div>
+      <div class="metric"><div class="metric-label">Return %</div><div class="metric-val" style="color:${pnlColor};">${profitPct}%</div></div>
+      <div class="metric"><div class="metric-label">45% SL Level</div><div class="metric-val" style="color:var(--red);">₹${sl45}</div></div>
+    </div>
+    <div style="background:var(--bg3);border:2px solid ${slColor};border-radius:12px;padding:16px;margin-top:8px;">
+      <div style="font-size:14px;font-weight:700;color:${slColor};margin-bottom:6px;">${slLabel}</div>
+      <div style="font-size:13px;color:${actionColor};">${action}</div>
+    </div>
+    <div style="margin-top:10px;background:var(--bg3);border-radius:10px;padding:12px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:700;">TRAIL SL LADDER</div>
+      <table class="data-table">
+        <tr><td>Profit reaches 20pts</td><td style="color:var(--amber);">Move SL to breakeven ₹${entryPrem}</td></tr>
+        <tr><td>Profit reaches 40pts</td><td style="color:var(--amber);">Move SL to ₹${+(entryPrem+20).toFixed(0)} (lock 20pts)</td></tr>
+        <tr><td>Profit reaches 60pts</td><td style="color:var(--green);">Move SL to ₹${+(entryPrem+40).toFixed(0)} (lock 40pts)</td></tr>
+        <tr><td>Profit reaches 80pts</td><td style="color:var(--green);">Move SL to ₹${+(entryPrem+60).toFixed(0)} (lock 60pts)</td></tr>
+        <tr><td>Profit reaches 100pts+</td><td style="color:var(--green);">Book 50%, let rest run free</td></tr>
+      </table>
+    </div>`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// MCX DATA PERSISTENCE — Save and Load with Date
+// ═══════════════════════════════════════════════════════════════
+const MCX_DATA_KEY = 'crude_hunter_mcx_data';
+
+function saveMCXData() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const dateLabel = ist.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+  const data = {
+    date: dateLabel,
+    underlying: document.getElementById('mcx-underlying').value,
+    dte:        document.getElementById('mcx-dte').value,
+    callOI:     document.getElementById('mcx-call-oi').value,
+    putOI:      document.getElementById('mcx-put-oi').value,
+    callWall:   document.getElementById('mcx-call-wall').value,
+    putWall:    document.getElementById('mcx-put-wall').value,
+    atmCall:    document.getElementById('mcx-atm-call').value,
+    atmPut:     document.getElementById('mcx-atm-put').value
+  };
+  localStorage.setItem(MCX_DATA_KEY, JSON.stringify(data));
+}
+
+function loadMCXData() {
+  const saved = JSON.parse(localStorage.getItem(MCX_DATA_KEY) || '{}');
+  if (!saved.date) return;
+
+  // Check if data is from today
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const todayLabel = ist.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+  // Load data regardless of date — show banner indicating which date
+  if (saved.underlying) document.getElementById('mcx-underlying').value = saved.underlying;
+  if (saved.dte)        document.getElementById('mcx-dte').value = saved.dte;
+  if (saved.callOI)     document.getElementById('mcx-call-oi').value = saved.callOI;
+  if (saved.putOI)      document.getElementById('mcx-put-oi').value = saved.putOI;
+  if (saved.callWall)   document.getElementById('mcx-call-wall').value = saved.callWall;
+  if (saved.putWall)    document.getElementById('mcx-put-wall').value = saved.putWall;
+  if (saved.atmCall)    document.getElementById('mcx-atm-call').value = saved.atmCall;
+  if (saved.atmPut)     document.getElementById('mcx-atm-put').value = saved.atmPut;
+
+  // Show saved data banner
+  const isToday = saved.date === todayLabel;
+  const banner = document.getElementById('mcx-saved-banner');
+  if (banner) {
+    banner.style.display = 'block';
+    banner.innerHTML = isToday
+      ? '<span style="color:var(--green);">✅ Data saved for today — ' + saved.date + '</span>'
+      : '<span style="color:var(--amber);">⚠️ Showing data from ' + saved.date + ' — Update if needed for today (' + todayLabel + ')</span>';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// MORNING ALERT SYSTEM + QUIET HOURS + CRUDE OIL DIRECTION
+// ═══════════════════════════════════════════════════════════════
+
+// Check if current IST time is in quiet hours (11:30 PM - 8:00 AM)
+function isQuietHours() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const h = ist.getHours(), m = ist.getMinutes();
+  const mins = h * 60 + m;
+  // Quiet: 23:30 (1410) to 08:00 (480)
+  return mins >= 23 * 60 + 30 || mins < 8 * 60;
+}
+
+// Wrapper — only send Telegram outside quiet hours
+async function sendTelegramSafe(msg) {
+  if (isQuietHours()) {
+    console.log('Quiet hours — Telegram blocked:', msg.slice(0, 50));
+    return;
+  }
+  return sendTelegram(msg);
+}
+
+// Morning market summary — fires at 8:45 AM Mon-Fri
+let morningAlertFired = false;
+async function checkMorningAlert() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const h = ist.getHours(), m = ist.getMinutes();
+  const day = ist.getDay(); // 0=Sun, 1=Mon...5=Fri, 6=Sat
+
+  // Only Mon-Fri (1-5), at 8:45 AM
+  if (day < 1 || day > 5) return;
+  if (h !== 8 || m < 45 || m > 50) { morningAlertFired = false; return; }
+  if (morningAlertFired) return;
+  morningAlertFired = true;
+
+  // Fetch data for morning summary
+  try {
+    // WTI price + change
+    let wtiPrice = 0, wtiChg = 0, wtiDir = '—';
+    const wtiRes = await fetchYahoo('CL%3DF');
+    if (wtiRes) {
+      wtiPrice = wtiRes.price.toFixed(2);
+      wtiChg = ((wtiRes.price - wtiRes.prev) / wtiRes.prev * 100).toFixed(2);
+      wtiDir = wtiChg > 1.5 ? '📈 UP strongly' : wtiChg > 0.5 ? '📈 Mild up' :
+               wtiChg < -1.5 ? '📉 DOWN strongly' : wtiChg < -0.5 ? '📉 Mild down' : '↔ Flat';
+    }
+
+    // SGX Nifty / NIFTY futures
+    let niftyPrice = 0, niftyChg = 0, niftyDir = '—';
+    const niftyRes = await fetchYahoo('%5ENSEI');
+    if (niftyRes) {
+      niftyPrice = Math.round(niftyRes.price);
+      niftyChg = ((niftyRes.price - niftyRes.prev) / niftyRes.prev * 100).toFixed(2);
+      niftyDir = niftyChg > 0.5 ? '📈 Gap UP' : niftyChg < -0.5 ? '📉 Gap DOWN' : '↔ Flat open';
+    }
+
+    // VIX
+    let vix = 0;
+    const vixRes = await fetchYahoo('%5EINDIAVIX');
+    if (vixRes) vix = vixRes.price.toFixed(1);
+
+    // MCX crude direction from WTI
+    const mcxBias = parseFloat(wtiChg) > 1 ? 'BULLISH — Consider CE' :
+                    parseFloat(wtiChg) < -1 ? 'BEARISH — Consider PE' : 'NEUTRAL — Wait for signal';
+    const mcxColor = parseFloat(wtiChg) > 1 ? '🟢' : parseFloat(wtiChg) < -1 ? '🔴' : '🟡';
+
+    // Gemini quick news scan
+    const s = getSettings();
+    const key = s.geminiKey || DEFAULT_GEMINI;
+    let newsLine = 'Gemini scan not available';
+    if (key) {
+      try {
+        const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday:'long', day:'2-digit', month:'short' });
+        const prompt = `Today is ${today}. In exactly 2 lines max, tell me: 1) Any major market event today (RBI/Fed/elections/budget/geopolitical)? 2) Overall market bias for Indian markets today (bullish/bearish/neutral). Be very brief.`;
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const d = await r.json();
+        newsLine = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'No data';
+      } catch(e) { newsLine = 'News scan failed'; }
+    }
+
+    // Build and send morning Telegram
+    const msg = '🌅 <b>Good Morning Rohit — Market Summary</b>
+' +
+      '📅 ' + ist.toLocaleDateString('en-IN', {weekday:'long', day:'2-digit', month:'short', year:'numeric'}) + ' · 8:45 AM
+
+' +
+      '📊 <b>NIFTY:</b> ₹' + niftyPrice + ' (' + (niftyChg > 0 ? '+' : '') + niftyChg + '%) — ' + niftyDir + '
+' +
+      '🛢 <b>WTI Crude:</b> $' + wtiPrice + ' (' + (wtiChg > 0 ? '+' : '') + wtiChg + '%) — ' + wtiDir + '
+' +
+      '😰 <b>India VIX:</b> ' + vix + '
+
+' +
+      mcxColor + ' <b>MCX Crude Bias:</b> ' + mcxBias + '
+
+' +
+      '📰 <b>News:</b> ' + newsLine + '
+
+' +
+      '⚡ Open Crude Hunter Pro for full analysis.';
+
+    sendTelegram(msg); // Morning alert always sends — not restricted by quiet hours
+    console.log('Morning alert sent');
+
+  } catch(e) {
+    console.log('Morning alert failed:', e.message);
+  }
+}
+
+// Crude Oil Direction from WTI (automatic — no MCX website needed)
+async function getCrudeOilDirection() {
+  try {
+    const url3d = 'https://query1.finance.yahoo.com/v8/finance/chart/CL%3DF?interval=1h&range=3d';
+    for (const proxy of PROXIES) {
+      try {
+        const r = await fetch(proxy(url3d), { signal: AbortSignal.timeout(8000) });
+        const d = await r.json();
+        const result = d?.chart?.result?.[0];
+        if (!result) continue;
+
+        const closes = result.indicators.quote[0].close.filter(Boolean);
+        const current = closes[closes.length - 1];
+        const prev24h = closes[Math.max(0, closes.length - 24)]; // 24 hrs ago
+        const change24h = ((current - prev24h) / prev24h * 100).toFixed(2);
+        const change1h  = closes.length >= 2
+          ? ((current - closes[closes.length-2]) / closes[closes.length-2] * 100).toFixed(2)
+          : 0;
+
+        // Momentum: last 3 hourly candles
+        const last3 = closes.slice(-3);
+        const trend = last3[2] > last3[1] && last3[1] > last3[0] ? 'UP' :
+                      last3[2] < last3[1] && last3[1] < last3[0] ? 'DOWN' : 'MIXED';
+
+        const dir = parseFloat(change24h) > 1.5 ? 'BULLISH' :
+                    parseFloat(change24h) < -1.5 ? 'BEARISH' : 'NEUTRAL';
+
+        return { price: current, change24h, change1h, trend, dir };
+      } catch(e) {}
+    }
+  } catch(e) {}
+  return null;
+}
+
+// Check morning alert every minute
+setInterval(checkMorningAlert, 60 * 1000);
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+loadSettings();
+renderLevels();
+fetchWTI();
+loadMCXData();
+setInterval(fetchWTI, 90000);  // refresh WTI every 90 seconds
+
+// Populate expiry dropdown with next 6 months
+(function populateExpiry() {
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const mcxExpiry = { 1:17, 2:17, 3:19, 4:17, 5:19, 6:19, 7:17, 8:19, 9:17, 10:17, 11:19, 12:17 };
+  const now = new Date();
+  const sel = document.getElementById('mcx-expiry-auto');
+  sel.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const yr = String(d.getFullYear()).slice(2);
+    const mo = d.getMonth() + 1;
+    const day= mcxExpiry[mo] || 19;
+    const val = `${day}${months[mo-1]}20${yr}`;
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = `${months[mo-1]} 20${yr} (~${day} ${months[mo-1]})`;
+    sel.appendChild(opt);
+  }
+})();
+
+// Auto-refresh momentum data every 5 minutes
+setInterval(() => {
+  const momentumTab = document.getElementById('tab-momentum');
+  if (momentumTab && momentumTab.classList.contains('active')) {
+    autoFillMomentumData();
+  }
+}, 5 * 60 * 1000);
+
+// Auto-refresh NIFTY data + Gemini news every 30 minutes
+setInterval(() => {
+  const niftyTab = document.getElementById('tab-nifty-signal');
+  if (niftyTab && niftyTab.classList.contains('active')) {
+    fetchAllNiftyData();
+  } else {
+    // Run in background silently - just update news scan
+    scanNewsGemini(true);
+  }
+}, 30 * 60 * 1000);
+
+// Touch interaction to unlock audio
+document.addEventListener('touchstart', () => {
+  try { new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}, { once: true });
+
+// iOS Background Tab Handler
+// iOS kills timers when tab is backgrounded - resume on visibility change
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Tab became visible again - refresh data immediately
+    fetchWTI();
+    checkMorningAlert();
+    // If on momentum tab - refresh
+    const momentumTab = document.getElementById('tab-momentum');
+    if (momentumTab && momentumTab.classList.contains('active')) {
+      autoFillMomentumData();
+    }
+    // If on nifty tab - refresh
+    const niftyTab = document.getElementById('tab-nifty-signal');
+    if (niftyTab && niftyTab.classList.contains('active')) {
+      fetchAllNiftyData();
+    }
+  }
+});
+
+// iOS Wake Lock - prevent screen from sleeping when app is open
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      const wakeLock = await navigator.wakeLock.request('screen');
+      document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible') {
+          try { await navigator.wakeLock.request('screen'); } catch(e) {}
+        }
+      });
+    }
+  } catch(e) {}
+}
+requestWakeLock();
+
+// Add to Home Screen prompt helper
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:#ffcc00;color:#000;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:700;z-index:9998;display:flex;justify-content:space-between;align-items:center;';
+  banner.innerHTML = '📱 Add to Home Screen for best experience <button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:18px;cursor:pointer;">×</button>';
+  document.body.appendChild(banner);
+  banner.addEventListener('click', () => { e.prompt(); banner.remove(); });
+  setTimeout(() => { if (banner.parentElement) banner.remove(); }, 8000);
+});
+</script>
+</body>
+</html>
