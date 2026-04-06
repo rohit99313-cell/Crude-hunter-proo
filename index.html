@@ -2605,10 +2605,7 @@ window.addEventListener('beforeinstallprompt', function(e) {
   banner.addEventListener('click', function() { e.prompt(); banner.remove(); });
   setTimeout(function() { if (banner.parentElement) banner.remove(); }, 8000);
 });
-</script>
-</body>
-// 🔹 Save data to localStorage
-function saveData() {
+   function saveData() {
   const data = {
     underlying: document.querySelector('input[placeholder="Underlying Price"]').value,
     callOI: document.querySelector('input[placeholder="Total Call OI"]').value,
@@ -2622,4 +2619,8 @@ function saveData() {
 
   localStorage.setItem("mcxData", JSON.stringify(data));
 }
+</script>
+</body>
+// 🔹 Save data to localStorage
+
 </html>
