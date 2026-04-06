@@ -2607,4 +2607,19 @@ window.addEventListener('beforeinstallprompt', function(e) {
 });
 </script>
 </body>
+// 🔹 Save data to localStorage
+function saveData() {
+  const data = {
+    underlying: document.querySelector('input[placeholder="Underlying Price"]').value,
+    callOI: document.querySelector('input[placeholder="Total Call OI"]').value,
+    putOI: document.querySelector('input[placeholder="Total Put OI"]').value,
+    callWall: document.querySelector('input[placeholder="Highest Call OI Strike"]').value,
+    putWall: document.querySelector('input[placeholder="Highest Put OI Strike"]').value,
+    atmCall: document.querySelector('input[placeholder="ATM CE LTP"]').value,
+    atmPut: document.querySelector('input[placeholder="ATM PE LTP"]').value,
+    date: new Date().toDateString()
+  };
+
+  localStorage.setItem("mcxData", JSON.stringify(data));
+}
 </html>
