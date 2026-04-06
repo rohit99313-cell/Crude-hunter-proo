@@ -2619,6 +2619,20 @@ window.addEventListener('beforeinstallprompt', function(e) {
 
   localStorage.setItem("mcxData", JSON.stringify(data));
 }
+   // 🔹 Load data from localStorage
+function loadData() {
+  const saved = JSON.parse(localStorage.getItem("mcxData"));
+
+  if (saved && saved.date && saved.date === new Date().toDateString()) {
+    document.querySelector('input[placeholder="Underlying Price"]').value = saved.underlying;
+    document.querySelector('input[placeholder="Total Call OI"]').value = saved.callOI;
+    document.querySelector('input[placeholder="Total Put OI"]').value = saved.putOI;
+    document.querySelector('input[placeholder="Highest Call OI Strike"]').value = saved.callWall;
+    document.querySelector('input[placeholder="Highest Put OI Strike"]').value = saved.putWall;
+    document.querySelector('input[placeholder="ATM CE LTP"]').value = saved.atmCall;
+    document.querySelector('input[placeholder="ATM PE LTP"]').value = saved.atmPut;
+  }
+}
 </script>
 </body>
 // 🔹 Save data to localStorage
