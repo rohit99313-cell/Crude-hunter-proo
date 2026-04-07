@@ -2671,7 +2671,7 @@ async function checkEIAAlerts() {
   }
 
   // ALERT 3 — 9:15 PM (Post-EIA direction)
-  if (h === 21 && m >= 15 && m <= 19 && !eiaAlert915Fired) {
+ if (h === 19 && m >= 28 && m <= 35 && !eiaAlert800Fired) {
     eiaAlert915Fired = true;
     var wtiRes3 = await fetchYahoo('CL%3DF');
     var wtiNow3 = wtiRes3 ? wtiRes3.price : null;
