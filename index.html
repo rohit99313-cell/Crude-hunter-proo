@@ -1426,70 +1426,107 @@ function analyseMCX() {
   var atmCall    = parseFloat(document.getElementById('mcx-atm-call').value) || 0;
   var atmPut     = parseFloat(document.getElementById('mcx-atm-put').value)  || 0;
   var dteVal     = parseInt(document.getElementById('mcx-dte').value);
+  var vwapVal    = parseFloat(document.getElementById('mcx-vwap').value) || 0;
 
   if (!underlying || !callOI || !putOI) {
     alert('Please fill: Underlying Price, Total Call OI, Total Put OI');
     return;
   }
 
-  var pcr = putOI / callOI;
+  var pcr     = putOI / callOI;
   var maxPain = callWall && putWall ? Math.round((callWall + putWall) / 2) : underlying;
   var ivSkew  = atmPut > 0 && atmCall > 0 ? atmPut / atmCall : 1;
 
-  var oiScore = 0, mpScore = 0, wallScore = 0, ivScore = 0;
-
+  var oiScore = 0;
   if      (pcr > 1.3)  oiScore =  2;
   else if (pcr > 1.0)  oiScore =  1;
   else if (pcr < 0.7)  oiScore = -2;
   else if (pcr < 0.9)  oiScore = -1;
 
+  var mpScore = 0;
   if      (underlying < maxPain - 100) mpScore =  1;
   else if (underlying > maxPain + 100) mpScore = -1;
 
+  var wallScore = 0;
   if (callWall && underlying < callWall - 150) wallScore =  1;
   if (putWall  && underlying > putWall  + 150) wallScore = -1;
 
+  var ivScore = 0;
   if      (ivSkew > 1.15) ivScore =  1;
   else if (ivSkew < 0.85) ivScore = -1;
 
-  var totalScore = oiScore + mpScore + wallScore + ivScore;
+  var vwapScore = 0, vwapLabel = '—', vwapColor = 'var(--text3)';
+  if (vwapVal > 0) {
+    var vwapPct = ((underlying - vwapVal) / vwapVal * 100);
+    if (vwapPct > 1.5) {
+      vwapScore = -1;
+      vwapLabel = 'Price +' + vwapPct.toFixed(1) + '% above VWAP — overbought, CE risky';
+      vwapColor = 'var(--red)';
+    } else if (vwapPct < -1.5) {
+      vwapScore = 1;
+      vwapLabel = 'Price -' + Math.abs(vwapPct).toFixed(1) + '% below VWAP — oversold, PE risky';
+      vwapColor = 'var(--green)';
+    } else if (vwapPct > 0.3) {
+      vwapScore = 1;
+      vwapLabel = 'Price +' + vwapPct.toFixed(1) + '% above VWAP — bullish';
+      vwapColor = 'var(--green)';
+    } else if (vwapPct < -0.3) {
+      vwapScore = -1;
+      vwapLabel = 'Price -' + Math.abs(vwapPct).toFixed(1) + '% below VWAP — bearish';
+      vwapColor = 'var(--amber)';
+    } else {
+      vwapScore = 0;
+      vwapLabel = 'Price at VWAP — neutral zone';
+      vwapColor = 'var(--text3)';
+    }
+  }
+
+  var totalScore = oiScore + mpScore + wallScore + ivScore + vwapScore;
   var dualCheck  = Math.sign(oiScore) === Math.sign(mpScore) && oiScore !== 0;
+  var mcxScore100 = Math.round(((totalScore + 7) / 14) * 100);
+  mcxScore100 = Math.max(0, Math.min(100, mcxScore100));
 
   if (dteVal === 0) {
-    renderMCXResult('block','🚨 STAY OUT','0–3 days to expiry — absolute no-trade zone',pcr,maxPain,callWall,putWall,dteVal,dualCheck,false);
+    renderMCXResult('block','🚨 STAY OUT','0–3 days to expiry — absolute no-trade zone',
+      pcr,maxPain,callWall,putWall,dteVal,dualCheck,false,mcxScore100,vwapLabel,vwapColor,vwapVal);
     return;
   }
 
   var dir, label, sub;
   if (!dualCheck && oiScore !== 0) {
-    dir = 'wait'; label = '↔ WAIT'; sub = 'OI signal and Max Pain disagree — no trade today';
-  } else if (totalScore >= 3) {
-    dir = 'ce';   label = '⬆ STRONG BUY CE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Score ' + totalScore + '/6 · Dual check PASSED';
-  } else if (totalScore === 2) {
+    dir = 'wait'; label = '↔ WAIT'; sub = 'OI and Max Pain disagree — no trade today';
+  } else if (totalScore >= 4) {
+    dir = 'ce';   label = '⬆ STRONG BUY CE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Score ' + mcxScore100 + '/100 · All signals aligned';
+  } else if (totalScore >= 2) {
     dir = 'ce';   label = '⬆ BUY CE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Bullish bias confirmed';
-  } else if (totalScore <= -3) {
-    dir = 'pe';   label = '⬇ STRONG BUY PE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Score ' + totalScore + '/6 · Dual check PASSED';
-  } else if (totalScore === -2) {
+  } else if (totalScore <= -4) {
+    dir = 'pe';   label = '⬇ STRONG BUY PE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Score ' + mcxScore100 + '/100 · All signals aligned';
+  } else if (totalScore <= -2) {
     dir = 'pe';   label = '⬇ BUY PE'; sub = 'PCR ' + pcr.toFixed(2) + ' · Bearish bias confirmed';
   } else {
     dir = 'wait'; label = '↔ WAIT'; sub = 'Mixed signals — no clear edge today';
   }
 
-  var conf = Math.abs(totalScore) >= 3 ? 'HIGH' : Math.abs(totalScore) >= 2 ? 'MEDIUM' : 'LOW';
+  var conf = Math.abs(totalScore) >= 4 ? 'HIGH' : Math.abs(totalScore) >= 2 ? 'MEDIUM' : 'LOW';
   saveMCXData();
-  renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dteVal, dualCheck, conf);
+  renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dteVal, dualCheck, conf, mcxScore100, vwapLabel, vwapColor, vwapVal);
 
   if (conf === 'HIGH') {
     var lastMCXSignal = localStorage.getItem('last_mcx_signal') || '';
     var newMCXSignal  = dir + '_' + Math.round(pcr * 10);
     if (newMCXSignal !== lastMCXSignal) {
       localStorage.setItem('last_mcx_signal', newMCXSignal);
-      var msg = '⚡ <b>MCX Signal — HIGH Confidence</b>\n\n' + label + '\nPCR: ' + pcr.toFixed(2) + '\nMax Pain: ₹' + maxPain + '\nCall Wall: ₹' + (callWall||'--') + ' | Put Wall: ₹' + (putWall||'--') + '\n\n⚠️ React to confirmation, don\'t predict.';
+      var msg = '⚡ <b>MCX Signal — HIGH Confidence</b>\n\n' + label +
+        '\n📊 Score: <b>' + mcxScore100 + '/100</b> — ' + conf +
+        '\nPCR: ' + pcr.toFixed(2) +
+        '\nMax Pain: ₹' + maxPain +
+        '\nCall Wall: ₹' + (callWall||'--') + '  |  Put Wall: ₹' + (putWall||'--') +
+        (vwapVal > 0 ? '\nVWAP: $' + vwapVal.toFixed(2) + ' — ' + vwapLabel : '') +
+        '\n\n⚠️ Wait for price confirmation before entry.';
       sendTelegramSafe(msg);
     }
   }
 }
-
 function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, dualCheck, conf) {
   document.getElementById('mcx-result').classList.add('show');
 
