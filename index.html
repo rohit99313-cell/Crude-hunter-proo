@@ -2600,7 +2600,129 @@ function loadMCXData() {
 // ═══════════════════════════════════════════════════════════════
 // MORNING ALERT
 // ═══════════════════════════════════════════════════════════════
-var morningAlertFired = false;
+// ═══════════════════════════════════════════════════════════════
+// EIA WEDNESDAY ALERTS
+// ═══════════════════════════════════════════════════════════════
+var eiaAlert800Fired  = false;
+var eiaAlert815Fired  = false;
+var eiaAlert915Fired  = false;
+var wtiBaseline       = null;
+var wtiBaselineTime   = null;
+
+async function checkEIAAlerts() {
+  var now = new Date();
+  var ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  var h   = ist.getHours();
+  var m   = ist.getMinutes();
+  var day = ist.getDay();
+
+  // Only runs on Wednesday (day === 3)
+  if (day !== 3) {
+    eiaAlert800Fired = false;
+    eiaAlert815Fired = false;
+    eiaAlert915Fired = false;
+    wtiBaseline      = null;
+    return;
+  }
+
+  var mins = h * 60 + m;
+
+  // ALERT 1 — 8:00 PM (Pre-EIA warning)
+  if (h === 19 && m >= 8 && m <= 12 && !eiaAlert800Fired) {
+    eiaAlert800Fired = true;
+    var msg = '⚠️ <b>EIA WARNING — 30 Minutes to Go</b>\n\n' +
+      '📅 Wednesday 8:00 PM IST\n\n' +
+      '🛢 EIA Crude Inventory report releases at 8:30 PM IST.\n\n' +
+      '❌ Do NOT enter new MCX trades after 8:15 PM\n' +
+      '✅ If you have open positions — check your SL now\n' +
+      '⏰ Stay out until 9:00 PM minimum\n\n' +
+      '⚡ Next alert at 8:15 PM when blackout starts.';
+    sendTelegram(msg);
+
+    // Store WTI baseline price at ~8:00 PM
+    var wtiRes = await fetchYahoo('CL%3DF');
+    if (wtiRes) {
+      wtiBaseline = wtiRes.price;
+      wtiBaselineTime = '20:00';
+    }
+  }
+
+  // ALERT 2 — 8:15 PM (Blackout starts)
+  if (h === 20 && m >= 15 && m <= 19 && !eiaAlert815Fired) {
+    eiaAlert815Fired = true;
+    var wtiNow = null;
+    var wtiRes2 = await fetchYahoo('CL%3DF');
+    if (wtiRes2) wtiNow = wtiRes2.price;
+
+    // Update baseline to 8:15 PM for more accurate post-EIA comparison
+    if (wtiNow) {
+      wtiBaseline = wtiNow;
+      wtiBaselineTime = '20:15';
+    }
+
+    var msg2 = '🚨 <b>EIA BLACKOUT STARTED — 8:15 PM</b>\n\n' +
+      '⛔ DO NOT enter any new MCX trades now\n' +
+      '📊 Spreads are widening. Stop hunts happening.\n' +
+      (wtiNow ? '🛢 WTI now: $' + wtiNow.toFixed(2) + ' (baseline locked)\n' : '') +
+      '\n⏰ EIA releases at 8:30 PM IST\n' +
+      '✅ Next alert at 9:15 PM with direction signal.\n\n' +
+      '☕ Step away. Let the dust settle.';
+    sendTelegram(msg2);
+  }
+
+  // ALERT 3 — 9:15 PM (Post-EIA direction)
+  if (h === 21 && m >= 15 && m <= 19 && !eiaAlert915Fired) {
+    eiaAlert915Fired = true;
+    var wtiRes3 = await fetchYahoo('CL%3DF');
+    var wtiNow3 = wtiRes3 ? wtiRes3.price : null;
+
+    var msg3 = '📊 <b>EIA POST-REPORT SIGNAL — 9:15 PM</b>\n\n';
+
+    if (wtiNow3 && wtiBaseline) {
+      var wtiChg3 = ((wtiNow3 - wtiBaseline) / wtiBaseline * 100);
+      var wtiChgStr = (wtiChg3 > 0 ? '+' : '') + wtiChg3.toFixed(2) + '%';
+
+      if (wtiChg3 > 1.2) {
+        msg3 += '🟢 <b>SIGNAL: BUY CE</b>\n' +
+          'WTI rose ' + wtiChgStr + ' post-EIA\n' +
+          '✅ DRAW confirmed — crude stocks fell\n' +
+          '📈 MCX likely bullish\n\n' +
+          '⚠️ Wait for MCX price to stabilise before entry\n' +
+          'Entry window: 9:15 PM – 10:00 PM IST';
+      } else if (wtiChg3 < -1.2) {
+        msg3 += '🔴 <b>SIGNAL: BUY PE</b>\n' +
+          'WTI fell ' + wtiChgStr + ' post-EIA\n' +
+          '✅ BUILD confirmed — crude stocks rose\n' +
+          '📉 MCX likely bearish\n\n' +
+          '⚠️ Wait for MCX price to stabilise before entry\n' +
+          'Entry window: 9:15 PM – 10:00 PM IST';
+      } else if (wtiChg3 > 0.5) {
+        msg3 += '🟡 <b>SIGNAL: MILD CE BIAS</b>\n' +
+          'WTI rose ' + wtiChgStr + ' — weak reaction\n' +
+          '⚠️ Wait for stronger confirmation before entry';
+      } else if (wtiChg3 < -0.5) {
+        msg3 += '🟡 <b>SIGNAL: MILD PE BIAS</b>\n' +
+          'WTI fell ' + wtiChgStr + ' — weak reaction\n' +
+          '⚠️ Wait for stronger confirmation before entry';
+      } else {
+        msg3 += '⚪ <b>SIGNAL: WAIT — No clear direction</b>\n' +
+          'WTI moved only ' + wtiChgStr + ' post-EIA\n' +
+          '↔ Inconclusive. Skip trading tonight.';
+      }
+
+      msg3 += '\n\n🛢 WTI baseline: $' + wtiBaseline.toFixed(2) +
+        '\n🛢 WTI now: $' + wtiNow3.toFixed(2) +
+        '\n📊 Change: ' + wtiChgStr;
+    } else {
+      msg3 += '⚠️ Could not fetch WTI price.\nCheck WTI manually before trading.';
+    }
+
+    sendTelegram(msg3);
+  }
+}
+
+setInterval(checkEIAAlerts, 60 * 1000);
+   var morningAlertFired = false;
 
 async function checkMorningAlert() {
   var now = new Date();
