@@ -468,7 +468,9 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
 
 <div class="input-group">
   <label class="input-label">VWAP Price (₹)</label>
-  <input type="number" id="mcx-vwap" placeholder="Enter VWAP price">
+ <input type="number" id="mcx-vwap" placeholder="Auto-fetched or enter manually">
+<div id="mcx-vwap-status" style="margin-top:4px;min-height:16px;"></div>
+<button class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="fetchMCXVWAP()">🔄 Auto-fetch WTI VWAP</button>
 </div>
       <div class="input-group">
         <label class="input-label">Days to Expiry</label>
