@@ -1210,7 +1210,72 @@ async function fetchYahoo(symbol) {
   return null;
 }
 
-async function fetchWTI() {
+async function fetchVWAP(symbol) {
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=5m&range=1d';
+  for (var i = 0; i < PROXIES.length; i++) {
+    try {
+      var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(10000) });
+      var d = await r.json();
+      var result = d && d.chart && d.chart.result && d.chart.result[0];
+      if (!result) continue;
+      var q = result.indicators.quote[0];
+      var closes = q.close || [];
+      var highs = q.high || [];
+      var lows = q.low || [];
+      var volumes = q.volume || [];
+      var cumTPV = 0, cumVol = 0;
+      for (var j = 0; j < closes.length; j++) {
+        if (!closes[j] || !highs[j] || !lows[j] || !volumes[j]) continue;
+        var tp = (highs[j] + lows[j] + closes[j]) / 3;
+        cumTPV += tp * volumes[j];
+        cumVol += volumes[j];
+      }
+      if (cumVol === 0) continue;
+      var vwap = cumTPV / cumVol;
+      var currentPrice = result.meta.regularMarketPrice;
+      var pctFromVWAP = ((currentPrice - vwap) / vwap * 100);
+      return { vwap: parseFloat(vwap.toFixed(2)), price: currentPrice, pct: parseFloat(pctFromVWAP.toFixed(2)) };
+    } catch(e) {}
+  }
+  return null;
+}
+
+async function fetchMCXVWAP() {
+  var el = document.getElementById('mcx-vwap-status');
+  if (el) el.innerHTML = '<span style="color:var(--text3);font-size:11px;">Fetching WTI VWAP...</span>';
+  var result = await fetchVWAP('CL%3DF');
+  if (result) {
+    document.getElementById('mcx-vwap').value = result.vwap.toFixed(2);
+    var col = Math.abs(result.pct) > 1.5 ? 'var(--red)' : result.pct > 0 ? 'var(--green)' : 'var(--amber)';
+    var label = result.pct > 1.5  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — overbought, CE risky ⚠️' :
+                result.pct < -1.5 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — oversold, PE risky ⚠️' :
+                result.pct > 0.3  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — mild bullish' :
+                result.pct < -0.3 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — mild bearish' :
+                                    'Price at VWAP — neutral zone';
+    if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">WTI VWAP $' + result.vwap.toFixed(2) + ' · ' + label + '</span>';
+  } else {
+    if (el) el.innerHTML = '<span style="color:var(--text3);font-size:11px;">VWAP fetch failed — enter manually</span>';
+  }
+}
+
+async function fetchNiftyVWAP(addFn) {
+  var result = await fetchVWAP('%5ENSEI');
+  if (result) {
+    document.getElementById('nifty-vwap').value = Math.round(result.vwap);
+    var col = Math.abs(result.pct) > 1.5 ? 'var(--red)' : result.pct > 0 ? 'var(--green)' : 'var(--amber)';
+    var label = result.pct > 1.5  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — stretched ⚠️' :
+                result.pct < -1.5 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — stretched ⚠️' :
+                result.pct > 0.4  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP' :
+                result.pct < -0.4 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP' :
+                                    'Price at VWAP — neutral';
+    if (addFn) addFn('✅', 'NIFTY VWAP: ₹' + Math.round(result.vwap) + ' (' + (result.pct > 0 ? '+' : '') + result.pct.toFixed(2) + '%) — ' + label, col);
+    return result;
+  } else {
+    if (addFn) addFn('⚠️', 'NIFTY VWAP fetch failed — enter manually', 'var(--amber)');
+    return null;
+  }
+}
+   async function fetchWTI() {
   var res = await fetchYahoo('CL%3DF');
   if (res) {
     var chg = ((res.price - res.prev) / res.prev * 100).toFixed(2);
