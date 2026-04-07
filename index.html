@@ -1527,15 +1527,33 @@ function analyseMCX() {
     }
   }
 }
-function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, dualCheck, conf) {
+function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, dualCheck, conf, mcxScore100, vwapLabel, vwapColor, vwapVal) {
   document.getElementById('mcx-result').classList.add('show');
 
-  var confBadge = conf ? '<div style="margin-top:10px;"><span class="conf-badge conf-' + conf.toLowerCase() + '">' + conf + ' CONFIDENCE</span></div>' : '';
+  var sc = mcxScore100 >= 65 ? 'var(--green)' : mcxScore100 <= 35 ? 'var(--red)' : 'var(--amber)';
+  var confBadge = conf ? '<span class="conf-badge conf-' + conf.toLowerCase() + '">' + conf + ' CONFIDENCE</span>' : '';
+
   document.getElementById('mcx-signal-box').innerHTML =
-    '<div class="signal-box ' + dir + '"><div class="signal-dir ' + dir + '">' + label + '</div><div class="signal-sub">' + sub + '</div>' + confBadge + '</div>';
+    '<div class="signal-box ' + dir + '">' +
+    '<div class="signal-dir ' + dir + '">' + label + '</div>' +
+    '<div class="signal-sub">' + sub + '</div>' +
+    '<div style="margin-top:10px;">' + confBadge + '</div>' +
+    (mcxScore100 !== undefined ?
+    '<div style="margin-top:16px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+    '<div><div style="font-size:11px;color:var(--text3);">MCX SIGNAL SCORE</div>' +
+    '<div style="font-size:11px;color:var(--text3);">0 = Strong PE &nbsp;·&nbsp; 50 = Neutral &nbsp;·&nbsp; 100 = Strong CE</div></div>' +
+    '<div style="font-size:40px;font-weight:900;font-family:var(--mono);color:' + sc + ';">' + mcxScore100 + '</div>' +
+    '</div>' +
+    '<div class="score-bar-bg"><div class="score-bar-fill" style="width:' + mcxScore100 + '%;background:' + sc + ';"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:3px;">' +
+    '<span>Strong PE &lt;35</span><span>Wait 35–65</span><span>Strong CE &gt;65</span></div>' +
+    '</div>' : '') +
+    '</div>';
 
   var pcrClass = pcr > 1.2 ? 'green' : pcr < 0.8 ? 'red' : 'amber';
-  var pcrTxt   = pcr > 1.3 ? 'Strongly Bullish' : pcr > 1.0 ? 'Mild Bullish' : pcr > 0.8 ? 'Neutral' : pcr > 0.6 ? 'Mild Bearish' : 'Strongly Bearish';
+  var pcrTxt = pcr > 1.3 ? 'Strongly Bullish' : pcr > 1.0 ? 'Mild Bullish' : pcr > 0.8 ? 'Neutral' : pcr > 0.6 ? 'Mild Bearish' : 'Strongly Bearish';
+
   document.getElementById('mcx-breakdown').innerHTML =
     '<div class="metric-grid">' +
     '<div class="metric"><div class="metric-label">PCR</div><div class="metric-val ' + pcrClass + '">' + pcr.toFixed(2) + '</div></div>' +
@@ -1545,15 +1563,17 @@ function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, 
     '</div>' +
     '<table class="data-table">' +
     '<tr><td>PCR reading</td><td>' + pcrTxt + '</td></tr>' +
-    '<tr><td>PCR > 1.3 = Bullish · < 0.8 = Bearish</td><td>' + (pcr > 1.3 ? '✅ Bullish' : pcr < 0.8 ? '🔴 Bearish' : '↔ Neutral') + '</td></tr>' +
+    '<tr><td>PCR > 1.3 Bullish · < 0.8 Bearish</td><td>' + (pcr > 1.3 ? '✅ Bullish' : pcr < 0.8 ? '🔴 Bearish' : '↔ Neutral') + '</td></tr>' +
+    '<tr><td>VWAP Check' + (vwapVal > 0 ? ' ($' + vwapVal.toFixed(2) + ')' : '') + '</td>' +
+    '<td style="color:' + (vwapVal > 0 ? vwapColor : 'var(--text3)') + ';">' + (vwapVal > 0 ? vwapLabel : 'Tap Auto-fetch VWAP above') + '</td></tr>' +
     '</table>';
 
   var thetaData = [
-    { min:21, rate:4,  zone:'SAFE',       color:'var(--green)'  },
-    { min:14, rate:7,  zone:'WATCH',      color:'#88dd44'       },
-    { min:7,  rate:12, zone:'CAUTION',    color:'var(--amber)'  },
-    { min:3,  rate:20, zone:'DANGER',     color:'var(--orange)' },
-    { min:0,  rate:35, zone:'DO NOT TRADE',color:'var(--red)'   }
+    { min:21, rate:4,  zone:'SAFE',        color:'var(--green)'  },
+    { min:14, rate:7,  zone:'WATCH',       color:'#88dd44'       },
+    { min:7,  rate:12, zone:'CAUTION',     color:'var(--amber)'  },
+    { min:3,  rate:20, zone:'DANGER',      color:'var(--orange)' },
+    { min:0,  rate:35, zone:'DO NOT TRADE',color:'var(--red)'    }
   ];
   var zone = thetaData.find(function(z) { return dte >= z.min; }) || thetaData[4];
   document.getElementById('mcx-theta').innerHTML =
@@ -1567,17 +1587,22 @@ function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, 
   document.getElementById('mcx-dual').innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' +
     '<div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid ' + (pcr>1?'var(--green-border)':'var(--red-border)') + ';">' +
-    '<div style="font-size:11px;color:var(--text3);">CHECK 1 — OI</div>' +
+    '<div style="font-size:11px;color:var(--text3);">CHECK 1 — OI/PCR</div>' +
     '<div style="font-size:15px;font-weight:700;color:' + (pcr>1?'var(--green)':'var(--red)') + ';">' + (pcr>1?'⬆ BULLISH':'⬇ BEARISH') + '</div>' +
     '<div style="font-size:11px;color:var(--text3);">PCR ' + pcr.toFixed(2) + '</div></div>' +
     '<div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid ' + (dualCheck?'var(--green-border)':'var(--amber-border)') + ';">' +
     '<div style="font-size:11px;color:var(--text3);">CHECK 2 — Max Pain</div>' +
     '<div style="font-size:15px;font-weight:700;color:' + (dualCheck?'var(--green)':'var(--amber)') + ';">' + (dualCheck?'✓ AGREES':'✗ DIFFERS') + '</div>' +
     '<div style="font-size:11px;color:var(--text3);">₹' + maxPain + '</div></div></div>' +
+    (vwapVal > 0 ?
+    '<div style="background:var(--bg3);border-radius:var(--r);padding:12px;border:1px solid ' + vwapColor + ';margin-bottom:10px;">' +
+    '<div style="font-size:11px;color:var(--text3);">CHECK 3 — VWAP</div>' +
+    '<div style="font-size:13px;font-weight:700;color:' + vwapColor + ';">' + vwapLabel + '</div></div>' : '') +
     '<div style="padding:12px;border-radius:var(--r);background:' + (dualCheck?'var(--green-bg)':'var(--amber-bg)') + ';border:1px solid ' + (dualCheck?'var(--green-border)':'var(--amber-border)') + ';">' +
-    '<span style="font-weight:700;font-size:14px;color:' + (dualCheck?'var(--green)':'var(--amber)') + ';">' + (dualCheck?'✅ DUAL CHECK PASSED — Both signals agree. Proceed.':'⚠️ DUAL CHECK FAILED — Signals conflict. Wait.') + '</span></div>';
+    '<span style="font-weight:700;font-size:14px;color:' + (dualCheck?'var(--green)':'var(--amber)') + ';">' +
+    (dualCheck ? '✅ DUAL CHECK PASSED — Both signals agree. Proceed.' : '⚠️ DUAL CHECK FAILED — Signals conflict. Wait.') +
+    '</span></div>';
 }
-
 // ═══════════════════════════════════════════════════════════════
 // MCX POSITION P&L
 // ═══════════════════════════════════════════════════════════════
