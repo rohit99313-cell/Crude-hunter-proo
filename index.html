@@ -1247,14 +1247,17 @@ async function fetchMCXVWAP() {
   if (el) el.innerHTML = '<span style="color:var(--text3);font-size:11px;">Fetching WTI VWAP...</span>';
   var result = await fetchVWAP('CL%3DF');
   if (result) {
-    document.getElementById('mcx-vwap').value = result.vwap.toFixed(2);
+   var usdInrRes = await fetchYahoo('USDINR%3DX');
+var usdInr = usdInrRes ? usdInrRes.price : 88;
+var mcxVwapInr = result.vwap * usdInr;
+document.getElementById('mcx-vwap').value = Math.round(mcxVwapInr);
     var col = Math.abs(result.pct) > 1.5 ? 'var(--red)' : result.pct > 0 ? 'var(--green)' : 'var(--amber)';
     var label = result.pct > 1.5  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — overbought, CE risky ⚠️' :
                 result.pct < -1.5 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — oversold, PE risky ⚠️' :
                 result.pct > 0.3  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — mild bullish' :
                 result.pct < -0.3 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — mild bearish' :
                                     'Price at VWAP — neutral zone';
-    if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">WTI VWAP $' + result.vwap.toFixed(2) + ' · ' + label + '</span>';
+if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">MCX VWAP ₹' + Math.round(mcxVwapInr) + ' (WTI $' + result.vwap.toFixed(2) + ' × ₹' + usdInr.toFixed(1) + ') · ' + label + '</span>';
   } else {
     if (el) el.innerHTML = '<span style="color:var(--text3);font-size:11px;">VWAP fetch failed — enter manually</span>';
   }
