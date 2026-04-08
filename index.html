@@ -1288,21 +1288,40 @@ if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">MCX VWAP
 }
 
 async function fetchNiftyVWAP(addFn) {
-  var result = await fetchVWAP('%5ENSEI');
-  if (result) {
-    document.getElementById('nifty-vwap').value = Math.round(result.vwap);
-    var col = Math.abs(result.pct) > 1.5 ? 'var(--red)' : result.pct > 0 ? 'var(--green)' : 'var(--amber)';
-    var label = result.pct > 1.5  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP — stretched ⚠️' :
-                result.pct < -1.5 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP — stretched ⚠️' :
-                result.pct > 0.4  ? 'Price +' + result.pct.toFixed(1) + '% above VWAP' :
-                result.pct < -0.4 ? 'Price -' + Math.abs(result.pct).toFixed(1) + '% below VWAP' :
-                                    'Price at VWAP — neutral';
-    if (addFn) addFn('✅', 'NIFTY VWAP: ₹' + Math.round(result.vwap) + ' (' + (result.pct > 0 ? '+' : '') + result.pct.toFixed(2) + '%) — ' + label, col);
-    return result;
-  } else {
-    if (addFn) addFn('⚠️', 'NIFTY VWAP fetch failed — enter manually', 'var(--amber)');
-    return null;
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=5m&range=1d';
+  for (var i = 0; i < PROXIES.length; i++) {
+    try {
+      var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(10000) });
+      var d = await r.json();
+      var result = d && d.chart && d.chart.result && d.chart.result[0];
+      if (!result) continue;
+      var q = result.indicators.quote[0];
+      var closes = q.close || [];
+      var highs = q.high || [];
+      var lows = q.low || [];
+      var cumTP = 0, count = 0;
+      for (var j = 0; j < closes.length; j++) {
+        if (!closes[j] || !highs[j] || !lows[j]) continue;
+        cumTP += (highs[j] + lows[j] + closes[j]) / 3;
+        count++;
+      }
+      if (count === 0) continue;
+      var vwap = cumTP / count;
+      var currentPrice = result.meta.regularMarketPrice;
+      var pct = parseFloat(((currentPrice - vwap) / vwap * 100).toFixed(2));
+      document.getElementById('nifty-vwap').value = Math.round(vwap);
+      var col = Math.abs(pct) > 1.5 ? 'var(--red)' : pct > 0 ? 'var(--green)' : 'var(--amber)';
+      var label = pct > 1.5 ? 'Price +' + pct.toFixed(1) + '% above VWAP — stretched ⚠️' :
+                  pct < -1.5 ? 'Price -' + Math.abs(pct).toFixed(1) + '% below VWAP — stretched ⚠️' :
+                  pct > 0.4 ? 'Price +' + pct.toFixed(1) + '% above VWAP' :
+                  pct < -0.4 ? 'Price -' + Math.abs(pct).toFixed(1) + '% below VWAP' :
+                  'Price at VWAP — neutral';
+      if (addFn) addFn('✅', 'NIFTY VWAP: ₹' + Math.round(vwap) + ' (' + (pct > 0 ? '+' : '') + pct + '%) — ' + label, col);
+      return { vwap: vwap, price: currentPrice, pct: pct };
+    } catch(e) {}
   }
+  if (addFn) addFn('⚠️', 'NIFTY VWAP fetch failed — enter manually', 'var(--amber)');
+  return null;
 }
    async function fetchWTI() {
   var res = await fetchYahoo('CL%3DF');
