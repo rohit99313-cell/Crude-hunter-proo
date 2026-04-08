@@ -1819,7 +1819,8 @@ async function fetchAllNiftyData() {
     add('ℹ️', 'Stock alignment: Set manually (Kite not connected)', 'var(--text3)');
   }
 
-  await tryFetchPCR(add);
+  await fetchNiftyVWAP(add);
+   await tryFetchPCR(add);
   btn.innerHTML = '✅ Data Fetched — Now tap Analyse';
   scanNewsGemini();
 }
