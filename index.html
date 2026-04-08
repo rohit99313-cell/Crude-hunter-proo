@@ -1341,6 +1341,17 @@ async function fetchNiftyVWAP(addFn) {
   if (addFn) addFn('⚠️', 'NIFTY VWAP fetch failed — enter manually', 'var(--amber)');
   return null;
 }
+   function calcGiftNiftyGap() {
+  var gift = parseFloat(document.getElementById('gift-nifty').value) || 0;
+  var prev = parseFloat(document.getElementById('prev-nifty-close').value) || 0;
+  var el = document.getElementById('gift-nifty-gap');
+  if (!gift || !prev) { el.innerHTML = ''; return; }
+  var gap = Math.round(gift - prev);
+  var pct = ((gap / prev) * 100).toFixed(2);
+  var col = gap >= 100 ? 'var(--green)' : gap <= -100 ? 'var(--red)' : gap > 0 ? 'var(--green)' : gap < 0 ? 'var(--amber)' : 'var(--text3)';
+  var label = gap >= 100 ? '🟢 Strong Gap UP — Bullish cue' : gap >= 50 ? '🟢 Mild Gap UP' : gap <= -100 ? '🔴 Strong Gap DOWN — Bearish cue' : gap <= -50 ? '🔴 Mild Gap DOWN' : '⚪ Flat — No clear bias';
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;color:' + col + ';">Gap: ' + (gap > 0 ? '+' : '') + gap + ' pts (' + (pct > 0 ? '+' : '') + pct + '%) — ' + label + '</div>';
+}
    async function fetchWTI() {
   var res = await fetchYahoo('CL%3DF');
   if (res) {
@@ -1801,6 +1812,7 @@ async function fetchAllNiftyData() {
       document.getElementById('nifty-price').value = Math.round(res.price);
       document.getElementById('header-nifty').textContent = '₹' + Math.round(res.price).toLocaleString('en-IN');
       add('✅', 'NIFTY: ₹' + Math.round(res.price).toLocaleString('en-IN'), 'var(--green)');
+       document.getElementById('prev-nifty-close').value = Math.round(res.prev);
       var closes = res.data && res.data.chart && res.data.chart.result && res.data.chart.result[0] && res.data.chart.result[0].indicators && res.data.chart.result[0].indicators.quote && res.data.chart.result[0].indicators.quote[0] && res.data.chart.result[0].indicators.quote[0].close;
       closes = (closes || []).filter(Boolean);
       if (closes.length > 14) {
