@@ -1857,12 +1857,11 @@ async function fetchAllNiftyData() {
 function analyseNifty() {
    var fiiLastDate = localStorage.getItem('fii_entry_date') || '';
   var todayDate = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
-  if (fiiLastDate && fiiLastDate !== todayDate) {
-    document.getElementById('nifty-event-banner').innerHTML =
-      '<div style="background:rgba(255,204,0,0.15);border:2px solid var(--amber-border);border-radius:var(--r2);padding:12px;margin-bottom:12px;">' +
-      '<div style="font-size:14px;font-weight:700;color:var(--amber);">⚠️ FII DATA MAY BE STALE</div>' +
-      '<div style="font-size:12px;color:var(--text2);margin-top:4px;">Last entered: ' + fiiLastDate + ' — Update FII field before analysing for accurate score.</div></div>';
-  }
+ var fiiBanner = '';
+if (fiiLastDate && fiiLastDate !== todayDate) {
+  fiiBanner = '<div style="background:rgba(255,204,0,0.15);border:2px solid var(--amber-border);border-radius:var(--r2);padding:12px;margin-bottom:12px;"><div style="font-size:14px;font-weight:700;color:var(--amber);">⚠️ FII DATA MAY BE STALE</div><div style="font-size:12px;color:var(--text2);margin-top:4px;">Last entered: ' + fiiLastDate + ' — Update FII field before analysing.</div></div>';
+}
+document.getElementById('nifty-event-banner').innerHTML = fiiBanner;
   var price  = parseFloat(document.getElementById('nifty-price').value) || 0;
   var vix    = parseFloat(document.getElementById('nifty-vix').value)   || 0;
   var pcr    = parseFloat(document.getElementById('nifty-pcr').value)   || 0;
