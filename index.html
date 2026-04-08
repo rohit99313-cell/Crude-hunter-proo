@@ -1929,8 +1929,14 @@ document.getElementById('nifty-event-banner').innerHTML = fiiBanner;
   var bullStocks = NIFTY_STOCKS.filter(function(st) { return parseInt(document.getElementById('s-'+st.id).value) === 1; }).length;
   var bearStocks = NIFTY_STOCKS.filter(function(st) { return parseInt(document.getElementById('s-'+st.id).value) === -1; }).length;
 
+ // Gift Nifty gap adjustment
+  var giftNifty = parseFloat(document.getElementById('gift-nifty').value) || 0;
+  var prevClose = parseFloat(document.getElementById('prev-nifty-close').value) || 0;
+  var giftGap = (giftNifty && prevClose) ? Math.round(giftNifty - prevClose) : 0;
+  var giftL1Boost = giftGap >= 100 ? 3 : giftGap >= 50 ? 1 : giftGap <= -100 ? -3 : giftGap <= -50 ? -1 : 0;
+
   // Layer 1: Global Macro (20pts)
-  var l1 = 10;
+  var l1 = 10 + giftL1Boost;
   if (vix > 30) l1 = 0;
   else if (vix > 25) l1 = 3;
   else if (vix > 20) l1 -= 4;
@@ -2024,17 +2030,34 @@ document.getElementById('nifty-event-banner').innerHTML = fiiBanner;
   var conf = (total >= 70 || total <= 30) ? 'HIGH' : (total >= 60 || total <= 40) ? 'MEDIUM' : 'LOW';
 
   document.getElementById('nifty-result').classList.add('show');
-
+   // Master Signal
+  var masterBg, masterColor, masterIcon, masterText, masterSub;
+  if (vix > 30) {
+    masterIcon='🚫'; masterText='NO TRADE'; masterColor='var(--purple)'; masterBg='var(--purple-bg)';
+    masterSub='VIX too high. Stay out completely.';
+  } else if (total >= 65) {
+    masterIcon='🟢'; masterText='BUY CE'; masterColor='var(--green)'; masterBg='var(--green-bg)';
+    masterSub='Strong bullish alignment. Enter on any dip.' + (giftGap >= 100 ? ' Gift Nifty confirms gap up.' : '');
+  } else if (total >= 55) {
+    masterIcon='🟢'; masterText='MILD CE — WAIT FOR PULLBACK'; masterColor='var(--green)'; masterBg='var(--green-bg)';
+    masterSub='Bullish but not strong. Wait for dip before entry.';
+  } else if (total <= 35) {
+    masterIcon='🔴'; masterText='BUY PE'; masterColor='var(--red)'; masterBg='var(--red-bg)';
+    masterSub='Strong bearish alignment. Enter on any bounce.' + (giftGap <= -100 ? ' Gift Nifty confirms gap down.' : '');
+  } else if (total <= 45) {
+    masterIcon='🔴'; masterText='MILD PE — WAIT FOR PULLBACK'; masterColor='var(--red)'; masterBg='var(--red-bg)';
+    masterSub='Bearish but not strong. Wait for bounce before entry.';
+  } else {
+    masterIcon='⚪'; masterText='NO TRADE — WAIT'; masterColor='var(--amber)'; masterBg='var(--amber-bg)';
+    masterSub='Mixed signals. Protect capital. No trade today.';
+  }
   document.getElementById('nifty-signal-box').innerHTML =
-    '<div class="signal-box ' + dir + '">' +
-    '<div class="signal-dir ' + dir + '">' + label + '</div>' +
-    '<div class="signal-sub">' + sub + '</div>' +
-    '<div style="margin-top:10px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">' +
-    '<span class="conf-badge conf-' + conf.toLowerCase() + '">' + conf + ' CONFIDENCE</span>' +
-    (exhaustion ? '<span class="conf-badge" style="background:rgba(255,119,0,0.15);color:var(--orange);border:1px solid rgba(255,119,0,0.3);">⚡ EXHAUSTION: BUY ' + exhaustDir + '</span>' : '') +
-    (scalepMode ? '<span class="conf-badge" style="background:rgba(255,184,0,0.15);color:var(--amber);border:1px solid rgba(255,184,0,0.3);">⚡ SCALP MODE</span>' : '') +
-    '</div></div>' +
-    (vixWarning ? '<div style="background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.3);border-radius:10px;padding:12px;margin-top:8px;font-size:13px;color:var(--amber);">' + vixWarning + '</div>' : '');
+    '<div style="background:' + masterBg + ';border:3px solid ' + masterColor + ';border-radius:var(--r2);padding:20px;text-align:center;margin-bottom:12px;">' +
+    '<div style="font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:4px;">MASTER SIGNAL</div>' +
+    '<div style="font-size:36px;font-weight:900;color:' + masterColor + ';">' + masterIcon + ' ' + masterText + '</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-top:8px;">' + masterSub + '</div>' +
+    (giftGap !== 0 ? '<div style="margin-top:8px;font-size:12px;color:' + masterColor + ';">🎁 Gift Nifty Gap: ' + (giftGap > 0 ? '+' : '') + giftGap + ' pts</div>' : '') +
+    '</div>' + document.getElementById('nifty-signal-box').innerHTML;
 
   if (exhaustion) {
     document.getElementById('nifty-exhaustion-box').innerHTML =
