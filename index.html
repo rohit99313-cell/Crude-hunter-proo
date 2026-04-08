@@ -1510,7 +1510,7 @@ function analyseMCX() {
     dir = 'wait'; label = '↔ WAIT'; sub = 'Mixed signals — no clear edge today';
   }
 
-  var conf = Math.abs(totalScore) >= 4 ? 'HIGH' : Math.abs(totalScore) >= 2 ? 'MEDIUM' : 'LOW';
+  var conf = mcxScore100 >= 60 || mcxScore100 <= 40 ? 'HIGH' : mcxScore100 >= 50 || mcxScore100 <= 50 ? 'MEDIUM' : 'LOW';
   saveMCXData();
   renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dteVal, dualCheck, conf, mcxScore100, vwapLabel, vwapColor, vwapVal);
 
