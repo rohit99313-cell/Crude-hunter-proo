@@ -1541,7 +1541,15 @@ function analyseMCX() {
   if      (ivSkew > 1.15) ivScore =  1;
   else if (ivSkew < 0.85) ivScore = -1;
 
-  var vwapScore = 0, vwapLabel = '—', vwapColor = 'var(--text3)';
+  // USD/INR scoring modifier
+var usdInrScore = 0, usdInrLabel = '—';
+var liveUsdInr = parseFloat(localStorage.getItem('live_usdinr') || '0');
+if (liveUsdInr > 0) {
+  if      (liveUsdInr > 86) { usdInrScore =  1; usdInrLabel = '₹' + liveUsdInr.toFixed(1) + ' — Rupee weak, bullish for MCX'; }
+  else if (liveUsdInr > 84) { usdInrScore =  0; usdInrLabel = '₹' + liveUsdInr.toFixed(1) + ' — Rupee neutral'; }
+  else                       { usdInrScore = -1; usdInrLabel = '₹' + liveUsdInr.toFixed(1) + ' — Rupee strong, bearish for MCX'; }
+}
+   var vwapScore = 0, vwapLabel = '—', vwapColor = 'var(--text3)';
   if (vwapVal > 0) {
     var vwapPct = ((underlying - vwapVal) / vwapVal * 100);
     if (vwapPct > 1.5) {
@@ -1567,7 +1575,7 @@ function analyseMCX() {
     }
   }
 
-  var totalScore = oiScore + mpScore + wallScore + ivScore + vwapScore;
+  var totalScore = oiScore + mpScore + wallScore + ivScore + vwapScore + usdInrScore;
   var dualCheck  = Math.sign(oiScore) === Math.sign(mpScore) && oiScore !== 0;
   var mcxScore100 = Math.round(((totalScore + 7) / 14) * 100);
   mcxScore100 = Math.max(0, Math.min(100, mcxScore100));
@@ -1876,7 +1884,7 @@ async function fetchAllNiftyData() {
 
   try {
     var usdRes = await fetchYahoo('USDINR%3DX');
-    if (usdRes) add('✅', 'USD/INR: ₹' + usdRes.price.toFixed(2), 'var(--text2)');
+  if (usdRes) { localStorage.setItem('live_usdinr', usdRes.price.toFixed(2)); add('✅', 'USD/INR: ₹' + usdRes.price.toFixed(2), 'var(--text2)'); }
   } catch(e) {}
 
   var sv = getSettings();
