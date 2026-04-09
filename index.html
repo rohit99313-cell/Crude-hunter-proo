@@ -503,6 +503,13 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
 <div id="mcx-vwap-status" style="margin-top:4px;min-height:16px;"></div>
 <button class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="fetchMCXVWAP()">🔄 Auto-fetch WTI VWAP</button>
 </div>
+       <div class="input-group" style="margin-top:8px;">
+        <label class="input-label">DXY — Dollar Index</label>
+        <div id="dxy-display" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-family:var(--mono);font-size:14px;color:var(--text3);">Fetching DXY...</div>
+        <div style="margin-top:4px;">
+          <a href="https://www.investing.com/indices/us-dollar-index" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none;">📊 Check DXY manually — Investing.com</a>
+        </div>
+      </div>
       <div class="input-group">
         <label class="input-label">Days to Expiry</label>
         <select id="mcx-dte">
@@ -1312,7 +1319,44 @@ async function fetchVWAP(symbol) {
   return null;
 }
 
-async function fetchMCXVWAP() {
+async function fetchDXY() {
+  var el = document.getElementById('dxy-display');
+  if (!el) return;
+  try {loadSettings();
+renderLevels();
+fetchWTI();
+loadMCXData();
+setInterval(fetchWTI, 90000);
+    var res = await fetchYahoo('DX-Y.NYB');
+    if (res && res.price && res.prev) {
+      var chg = ((res.price - res.prev) / res.prev * 100);
+      var chgStr = (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+      var label, col;
+      if (chg > 0.5) {
+        label = '📈 DXY Rising — Dollar strengthening → Crude under PRESSURE';
+        col = 'var(--red)';
+      } else if (chg > 0.2) {
+        label = '📈 DXY Mildly up — Watch crude reaction';
+        col = 'var(--amber)';
+      } else if (chg < -0.5) {
+        label = '📉 DXY Falling — Dollar weakening → Crude gets TAILWIND';
+        col = 'var(--green)';
+      } else if (chg < -0.2) {
+        label = '📉 DXY Mildly down — Mild crude support';
+        col = 'var(--amber)';
+      } else {
+        label = '↔ DXY Flat — No dollar impact on crude';
+        col = 'var(--text3)';
+      }
+      el.innerHTML = '<span style="color:' + col + ';font-weight:700;">' + res.price.toFixed(2) + ' (' + chgStr + ')</span><div style="font-size:11px;color:' + col + ';margin-top:3px;">' + label + '</div>';
+    } else {
+      el.innerHTML = '<span style="color:var(--text3);">DXY fetch failed — <a href="https://www.investing.com/indices/us-dollar-index" target="_blank" style="color:var(--amber);">check manually ↗</a></span>';
+    }
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--text3);">DXY unavailable — <a href="https://www.investing.com/indices/us-dollar-index" target="_blank" style="color:var(--amber);">check manually ↗</a></span>';
+  }
+}
+   async function fetchMCXVWAP() {
   var el = document.getElementById('mcx-vwap-status');
   if (el) el.innerHTML = '<span style="color:var(--text3);font-size:11px;">Fetching WTI VWAP...</span>';
   var result = await fetchVWAP('CL%3DF');
@@ -2980,6 +3024,8 @@ setInterval(checkMorningAlert, 60 * 1000);
 loadSettings();
 renderLevels();
 fetchWTI();
+   fetchDXY();
+setInterval(fetchDXY, 5 * 60 * 1000);
    fetchBrent();
 loadMCXData();
  // Restore manually entered data
