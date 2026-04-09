@@ -1380,6 +1380,15 @@ async function fetchNiftyVWAP(addFn) {
   var label = gap >= 100 ? '🟢 Strong Gap UP — Bullish cue' : gap >= 50 ? '🟢 Mild Gap UP' : gap <= -100 ? '🔴 Strong Gap DOWN — Bearish cue' : gap <= -50 ? '🔴 Mild Gap DOWN' : '⚪ Flat — No clear bias';
   el.innerHTML = '<div style="font-size:13px;font-weight:700;color:' + col + ';">Gap: ' + (gap > 0 ? '+' : '') + gap + ' pts (' + (pct > 0 ? '+' : '') + pct + '%) — ' + label + '</div>';
 }
+   async function fetchBrent() {
+  var res = await fetchYahoo('BZ%3DF');
+  if (res) {
+    var chg = ((res.price - res.prev) / res.prev * 100).toFixed(2);
+    var col = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('header-brent').innerHTML =
+      '<span style="color:' + col + '">$' + res.price.toFixed(2) + ' (' + (chg > 0 ? '+' : '') + chg + '%)</span>';
+  }
+}
    async function fetchWTI() {
   var res = await fetchYahoo('CL%3DF');
   if (res) {
