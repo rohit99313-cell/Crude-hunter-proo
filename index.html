@@ -759,6 +759,7 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
     <div id="nifty-exhaustion-box"></div>
     <div class="card">
       <div class="card-title">Direction Score — 5 Layer Engine</div>
+       <div id="nifty-vix-meter"></div>
       <div id="nifty-score-display"></div>
     </div>
     <div class="card">
@@ -2152,7 +2153,7 @@ document.getElementById('fii-stale-banner').innerHTML = fiiBanner;
       '<div style="font-size:15px;font-weight:700;color:' + vixColor + ';">' + vixZone + ' — VIX ' + vix + '</div>' +
       '<div style="font-size:12px;color:var(--text2);margin-top:4px;">' + vixAction + '</div>' +
       '</div>';
-    document.getElementById('nifty-score-display').innerHTML = vixMeter;
+   document.getElementById('nifty-vix-meter').innerHTML = vixMeter;
   }
    var sc = total >= 65 ? 'var(--green)' : total <= 35 ? 'var(--red)' : 'var(--amber)';
   document.getElementById('nifty-score-display').innerHTML =
