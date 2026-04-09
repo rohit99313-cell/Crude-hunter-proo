@@ -640,6 +640,20 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
 <div class="tab tab-content" id="tab-nifty-signal">
   <div id="fii-stale-banner"></div>
 <div id="nifty-event-banner"></div>
+   <div class="card" id="daily-checklist-card">
+  <div class="card-title">☀️ DAILY TASK CHECKLIST — <span id="checklist-date" style="color:var(--amber);"></span></div>
+  <div id="daily-tasks">
+    <div class="check-item" id="dt-token"><div class="check-box" id="dtb-token"></div><div class="check-text"><b>Kite token pasted</b> in Settings tab</div></div>
+    <div class="check-item" id="dt-gift"><div class="check-box" id="dtb-gift"></div><div class="check-text"><b>Gift Nifty entered</b> — check Groww before 9:15 AM</div></div>
+    <div class="check-item" id="dt-fetch"><div class="check-box" id="dtb-fetch"></div><div class="check-text"><b>Fetch All Data tapped</b> — auto-fills NIFTY, VIX, RSI, DMA</div></div>
+    <div class="check-item" id="dt-stocks"><div class="check-box" id="dtb-stocks"></div><div class="check-text"><b>Stocks set</b> — at least 3 stocks set to Bull or Bear</div></div>
+    <div class="check-item" id="dt-pcr"><div class="check-box" id="dtb-pcr"></div><div class="check-text"><b>PCR entered</b> — from NSE option chain Total row</div></div>
+    <div class="check-item" id="dt-fii"><div class="check-box" id="dtb-fii"></div><div class="check-text"><b>FII data entered</b> — after 6 PM from NSE India</div></div>
+    <div class="check-item" id="dt-dxy"><div class="check-box" id="dtb-dxy"></div><div class="check-text"><b>DXY checked</b> — MCX tab opened today</div></div>
+    <div class="check-item" id="dt-eia"><div class="check-box" id="dtb-eia"></div><div class="check-text"><b>EIA result entered</b> — Wednesdays only after 8:30 PM</div></div>
+  </div>
+  <div id="daily-progress" style="margin-top:12px;"></div>
+</div>
    <div class="card">
   <div class="card-title">🎁 Gift Nifty — Pre-Market Gap Signal</div>
   <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Check before 9:15 AM. Indicates gap up/down direction for NIFTY open.</div>
@@ -1319,7 +1333,108 @@ async function fetchVWAP(symbol) {
   return null;
 }
 
-async function fetchDXY() {
+// ═══════════════════════════════════════════════════════════════
+// DAILY AUTO-CHECKLIST
+// ═══════════════════════════════════════════════════════════════
+function getTodayIST() {
+  return new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric' });
+}
+
+function updateDailyChecklist() {
+  var today = getTodayIST();
+  var el = document.getElementById('checklist-date');
+  if (el) el.textContent = today;
+
+  var ist = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  var isWednesday = ist.getDay() === 3;
+
+  // CHECK 1 — Kite token saved
+  var s = getSettings();
+  var tokenOk = !!(s.accessToken && s.accessToken.length > 10);
+
+  // CHECK 2 — Gift Nifty entered today
+  var giftOk = !!(parseFloat(document.getElementById('gift-nifty') && document.getElementById('gift-nifty').value) > 0);
+
+  // CHECK 3 — Fetch All Data tapped today
+  var fetchOk = localStorage.getItem('fetch_all_date') === today;
+
+  // CHECK 4 — At least 3 stocks set to Bull or Bear
+  var stockCount = 0;
+  ['hdfc','reliance','icici','tcs','infy','kotak','lt','axis','sbi','itc'].forEach(function(id) {
+    var el = document.getElementById('s-' + id);
+    if (el && el.value !== '0') stockCount++;
+  });
+  var stocksOk = stockCount >= 3;
+
+  // CHECK 5 — PCR entered
+  var pcrOk = !!(parseFloat(document.getElementById('nifty-pcr') && document.getElementById('nifty-pcr').value) > 0);
+
+  // CHECK 6 — FII entered today
+  var fiiDate = localStorage.getItem('fii_entry_date') || '';
+  var fiiOk = fiiDate === today && !!(parseFloat(document.getElementById('nifty-fii') && document.getElementById('nifty-fii').value) !== 0);
+
+  // CHECK 7 — DXY checked (MCX tab opened today)
+  var dxyOk = localStorage.getItem('dxy_checked_date') === today;
+
+  // CHECK 8 — EIA (only on Wednesdays, else auto-pass)
+  var eiaOk = !isWednesday;
+  if (isWednesday) {
+    var eiaEl = document.getElementById('eia-actual');
+    eiaOk = !!(eiaEl && eiaEl.value && eiaEl.value !== '');
+  }
+
+  var checks = {
+    'dt-token':  tokenOk,
+    'dt-gift':   giftOk,
+    'dt-fetch':  fetchOk,
+    'dt-stocks': stocksOk,
+    'dt-pcr':    pcrOk,
+    'dt-fii':    fiiOk,
+    'dt-dxy':    dxyOk,
+    'dt-eia':    eiaOk
+  };
+
+  var done = 0;
+  Object.keys(checks).forEach(function(id) {
+    var row = document.getElementById(id);
+    var box = document.getElementById('dtb-' + id.replace('dt-',''));
+    if (!row || !box) return;
+    if (checks[id]) {
+      row.classList.add('checked');
+      box.innerHTML = '✓';
+      done++;
+    } else {
+      row.classList.remove('checked');
+      box.innerHTML = '';
+    }
+  });
+
+  var total = Object.keys(checks).length;
+  var pct = Math.round(done / total * 100);
+  var col = done === total ? 'var(--green)' : done >= 5 ? 'var(--amber)' : 'var(--red)';
+  var progressEl = document.getElementById('daily-progress');
+  if (progressEl) {
+    progressEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+      '<span style="font-size:13px;color:var(--text2);">' + done + ' of ' + total + ' tasks done today</span>' +
+      '<span style="font-size:13px;font-weight:700;color:' + col + ';">' +
+      (done === total ? '✅ All done!' : done >= 5 ? '⚡ Almost there' : '⚠️ Tasks pending') +
+      '</span></div>' +
+      '<div class="score-bar-bg"><div class="score-bar-fill" style="width:' + pct + '%;background:' + col + ';transition:width 0.5s;"></div></div>' +
+      (done === total ? '' : '<div style="font-size:11px;color:var(--text3);margin-top:6px;">Checklist auto-resets tomorrow. Tasks tick automatically as you complete them.</div>');
+  }
+}
+
+function markFetchDone() {
+  localStorage.setItem('fetch_all_date', getTodayIST());
+  updateDailyChecklist();
+}
+
+function markDXYChecked() {
+  localStorage.setItem('dxy_checked_date', getTodayIST());
+  updateDailyChecklist();
+}
+   async function fetchDXY() {
   var el = document.getElementById('dxy-display');
   if (!el) return;
   try {loadSettings();
@@ -3022,6 +3137,8 @@ setInterval(checkMorningAlert, 60 * 1000);
 // INIT
 // ═══════════════════════════════════════════════════════════════
 loadSettings();
+updateDailyChecklist();
+setInterval(updateDailyChecklist, 30 * 1000);
 renderLevels();
 fetchWTI();
    fetchDXY();
