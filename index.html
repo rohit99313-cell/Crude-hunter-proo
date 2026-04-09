@@ -725,7 +725,7 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
     </div>
     <div class="input-group">
       <label class="input-label">FII Net Today (₹ Cr) — fill after 6 PM</label>
-      <input type="number" id="nifty-fii" placeholder="e.g. -2500 (negative = selling)" oninput="localStorage.setItem('fii_entry_date', new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }))">
+      <input type="number" id="nifty-fii" placeholder="e.g. -2500 (negative = selling)" oninput="localStorage.setItem('fii_entry_date', new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })); localStorage.setItem('saved_fii', this.value)">
        <a href="https://www.nseindia.com/reports/fii-dii" target="_blank" class="url-link-btn" style="margin-top:6px;">
   <span class="url-icon">💰</span><span>FII/DII Data — NSE India (check after 6 PM)</span>
 </a>
@@ -2968,6 +2968,15 @@ loadSettings();
 renderLevels();
 fetchWTI();
 loadMCXData();
+ // Restore manually entered data
+(function restoreManualData() {
+  var pcr = localStorage.getItem('saved_pcr');
+  var eia = localStorage.getItem('saved_eia');
+  var fii = localStorage.getItem('saved_fii');
+  if (pcr) document.getElementById('nifty-pcr').value = pcr;
+  if (eia) { document.getElementById('eia-actual').value = eia; interpretEIA(); }
+  if (fii) document.getElementById('nifty-fii').value = fii;
+})();  
 setInterval(fetchWTI, 90000);
 
 // Populate expiry dropdown
