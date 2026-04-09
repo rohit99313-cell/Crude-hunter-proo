@@ -2980,6 +2980,7 @@ setInterval(checkMorningAlert, 60 * 1000);
 loadSettings();
 renderLevels();
 fetchWTI();
+   fetchBrent();
 loadMCXData();
  // Restore manually entered data
 (function restoreManualData() {
@@ -2991,7 +2992,7 @@ loadMCXData();
   if (fii) document.getElementById('nifty-fii').value = fii;
 })();  
 setInterval(fetchWTI, 90000);
-
+setInterval(fetchBrent, 90000);
 // Populate expiry dropdown
 (function populateExpiry() {
   var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
