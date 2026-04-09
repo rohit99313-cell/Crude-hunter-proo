@@ -1864,7 +1864,7 @@ function renderMCXResult(dir, label, sub, pcr, maxPain, callWall, putWall, dte, 
   document.getElementById('mcx-breakdown').innerHTML =
     '<div class="metric-grid">' +
     '<div class="metric"><div class="metric-label">PCR</div><div class="metric-val ' + pcrClass + '">' + pcr.toFixed(2) + '</div></div>' +
-    '<div class="metric"><div class="metric-label">Max Pain Est.</div><div class="metric-val white">₹' + maxPain + '</div></div>' +
+    '<div class="metric"><div class="metric-label">Max Pain Est.</div><div class="metric-val amber">₹' + maxPain + '</div></div>' +
     '<div class="metric"><div class="metric-label">Call Wall</div><div class="metric-val red">₹' + (callWall||'—') + '</div></div>' +
     '<div class="metric"><div class="metric-label">Put Wall</div><div class="metric-val green">₹' + (putWall||'—') + '</div></div>' +
     '</div>' +
