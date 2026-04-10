@@ -682,7 +682,14 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
      
 </div>
 
-  <div class="card">
+ <div class="card">
+  <div class="card-title">📊 Market Structure — Trend & BOS/CHOCH</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Auto-detected from last 10 daily candles. Updates on Fetch All Data.</div>
+  <div id="market-structure-display">
+    <div style="font-size:13px;color:var(--text3);">Tap Fetch All Data to detect structure...</div>
+  </div>
+</div> 
+   <div class="card">
   <div class="card-title">📍 Previous Day High / Low — Key Levels</div>
   <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Auto-fetched daily. Price near these = high-probability zone. Never enter mid-range.</div>
   <div class="metric-grid" id="pdhl-display">
@@ -1452,7 +1459,86 @@ function markDXYChecked() {
   localStorage.setItem('dxy_checked_date', getTodayIST());
   updateDailyChecklist();
 }
-  async function fetchPDHL() {
+  async function fetchMarketStructure() {
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=1mo';
+  for (var i = 0; i < PROXIES.length; i++) {
+    try {
+      var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(10000) });
+      var d = await r.json();
+      var result = d && d.chart && d.chart.result && d.chart.result[0];
+      if (!result) continue;
+      var highs  = (result.indicators.quote[0].high  || []).filter(Boolean);
+      var lows   = (result.indicators.quote[0].low   || []).filter(Boolean);
+      var closes = (result.indicators.quote[0].close || []).filter(Boolean);
+      if (highs.length < 5) continue;
+
+      // Find swing highs and lows (last 10 candles)
+      var last = Math.min(10, highs.length);
+      var recentHighs = highs.slice(-last);
+      var recentLows  = lows.slice(-last);
+
+      var hh = recentHighs[recentHighs.length-1] > recentHighs[recentHighs.length-3];
+      var hl = recentLows[recentLows.length-1]   > recentLows[recentLows.length-3];
+      var lh = recentHighs[recentHighs.length-1] < recentHighs[recentHighs.length-3];
+      var ll = recentLows[recentLows.length-1]   < recentLows[recentLows.length-3];
+
+      var trend, trendCol, trendIcon;
+      if (hh && hl)      { trend = 'UPTREND';   trendCol = 'var(--green)';  trendIcon = '🟢'; }
+      else if (lh && ll) { trend = 'DOWNTREND'; trendCol = 'var(--red)';    trendIcon = '🔴'; }
+      else               { trend = 'SIDEWAYS';  trendCol = 'var(--amber)';  trendIcon = '🟡'; }
+
+      // BOS detection — current close above recent swing high
+      var swingHigh = Math.max(...recentHighs.slice(0, -1));
+      var swingLow  = Math.min(...recentLows.slice(0, -1));
+      var currClose = closes[closes.length-1];
+      var currPct   = ((currClose - closes[closes.length-2]) / closes[closes.length-2] * 100);
+
+      var bos = '', bosCol = 'var(--text3)';
+      if (currClose > swingHigh) {
+        bos = '✅ BOS — Price broke above swing high ₹' + Math.round(swingHigh) + ' → CE favoured';
+        bosCol = 'var(--green)';
+      } else if (currClose < swingLow) {
+        bos = '✅ BOS — Price broke below swing low ₹' + Math.round(swingLow) + ' → PE favoured';
+        bosCol = 'var(--red)';
+      } else {
+        bos = '↔ No BOS — Price inside structure (₹' + Math.round(swingLow) + ' – ₹' + Math.round(swingHigh) + ')';
+        bosCol = 'var(--amber)';
+      }
+
+      // CHOCH detection — % based
+      var choch = '', chochCol = 'var(--text3)';
+      var absPct = Math.abs(currPct);
+      if (absPct >= 3) {
+        choch = '🚨 CHOCH — ' + (currPct > 0 ? '+' : '') + currPct.toFixed(1) + '% move — STRONG reversal signal. Consider ' + (currPct > 0 ? 'PE' : 'CE') + '.';
+        chochCol = 'var(--red)';
+      } else if (absPct >= 2) {
+        choch = '⚠️ CHOCH — ' + (currPct > 0 ? '+' : '') + currPct.toFixed(1) + '% move — Reversal alert. Watch for ' + (currPct > 0 ? 'PE' : 'CE') + ' entry.';
+        chochCol = 'var(--orange)';
+      } else if (absPct >= 1.5) {
+        choch = '👀 CHOCH Early — ' + (currPct > 0 ? '+' : '') + currPct.toFixed(1) + '% move — Caution. Monitor closely.';
+        chochCol = 'var(--amber)';
+      }
+
+      var el = document.getElementById('market-structure-display');
+      if (!el) return;
+      el.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:12px;background:var(--bg3);border-radius:var(--r);border-left:4px solid ' + trendCol + ';">' +
+        '<div style="font-size:28px;">' + trendIcon + '</div>' +
+        '<div><div style="font-size:18px;font-weight:900;color:' + trendCol + ';">' + trend + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);">' + (hh?'Higher High ✅':'') + (hl?' · Higher Low ✅':'') + (lh?'Lower High ✅':'') + (ll?' · Lower Low ✅':'') + '</div></div></div>' +
+        '<div style="font-size:13px;font-weight:700;color:' + bosCol + ';padding:8px 0;border-bottom:1px solid var(--border);">' + bos + '</div>' +
+        (choch ? '<div style="font-size:13px;font-weight:700;color:' + chochCol + ';padding:8px 0;margin-top:4px;">' + choch + '</div>' : '<div style="font-size:12px;color:var(--text3);padding:8px 0;margin-top:4px;">No CHOCH detected — normal trading day</div>') +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' +
+        '<div class="metric"><div class="metric-label">SWING HIGH</div><div class="metric-val red">₹' + Math.round(swingHigh) + '</div></div>' +
+        '<div class="metric"><div class="metric-label">SWING LOW</div><div class="metric-val green">₹' + Math.round(swingLow) + '</div></div>' +
+        '</div>';
+      return;
+    } catch(e) {}
+  }
+  var el = document.getElementById('market-structure-display');
+  if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);">Market structure fetch failed — try again.</div>';
+}
+   async function fetchPDHL() {
   var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=5d';
   for (var i = 0; i < PROXIES.length; i++) {
     try {
@@ -2185,6 +2271,7 @@ async function fetchAllNiftyData() {
 
   await fetchNiftyVWAP(add);
    fetchPDHL();
+   fetchMarketStructure();
   add('ℹ️', 'PCR — Enter manually from nseindia.com/option-chain', 'var(--text3)');
   btn.innerHTML = '✅ Data Fetched — Now tap Analyse';
    markFetchDone();
