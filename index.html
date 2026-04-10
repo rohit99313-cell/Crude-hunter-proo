@@ -1642,11 +1642,7 @@ function markDXYChecked() {
    async function fetchDXY() {
   var el = document.getElementById('dxy-display');
   if (!el) return;
-  try {loadSettings();
-renderLevels();
-fetchWTI();
-loadMCXData();
-setInterval(fetchWTI, 90000);
+try {
     var res = await fetchYahoo('DX-Y.NYB');
     if (res && res.price && res.prev) {
       var chg = ((res.price - res.prev) / res.prev * 100);
