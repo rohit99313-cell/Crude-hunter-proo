@@ -683,6 +683,13 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
 </div>
 
  <div class="card">
+  <div class="card-title">💧 Liquidity Sweep Detector</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Detects when institutions sweep stops above PDH or below PDL then reverse. High probability reversal signal.</div>
+  <div id="liquidity-sweep-display">
+    <div style="font-size:13px;color:var(--text3);">Tap Fetch All Data to detect sweeps...</div>
+  </div>
+</div>
+   <div class="card">
   <div class="card-title">📊 Market Structure — Trend & BOS/CHOCH</div>
   <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Auto-detected from last 10 daily candles. Updates on Fetch All Data.</div>
   <div id="market-structure-display">
@@ -1459,7 +1466,60 @@ function markDXYChecked() {
   localStorage.setItem('dxy_checked_date', getTodayIST());
   updateDailyChecklist();
 }
-  async function fetchMarketStructure() {
+  async function fetchLiquiditySweep() {
+  var el = document.getElementById('liquidity-sweep-display');
+  if (!el) return;
+
+  try {
+    var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=5d';
+    var result = null;
+    for (var i = 0; i < PROXIES.length; i++) {
+      try {
+        var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(8000) });
+        var d = await r.json();
+        result = d && d.chart && d.chart.result && d.chart.result[0];
+        if (result) break;
+      } catch(e) {}
+    }
+    if (!result) throw new Error('fetch failed');
+
+    var highs  = (result.indicators.quote[0].high  || []).filter(Boolean);
+    var lows   = (result.indicators.quote[0].low   || []).filter(Boolean);
+    var opens  = (result.indicators.quote[0].open  || []).filter(Boolean);
+    var closes = (result.indicators.quote[0].close || []).filter(Boolean);
+    if (highs.length < 2) throw new Error('not enough data');
+
+    // Today's candle
+    var todayHigh  = highs[highs.length - 1];
+    var todayLow   = lows[lows.length - 1];
+    var todayClose = closes[closes.length - 1];
+    var todayOpen  = opens[opens.length - 1];
+
+    // Previous day high/low
+    var pdh = highs[highs.length - 2];
+    var pdl = lows[lows.length - 2];
+
+    var swept       = false;
+    var sweepType   = '';
+    var sweepMsg    = '';
+    var sweepCol    = 'var(--text3)';
+    var confidence  = '';
+    var confCol     = 'var(--text3)';
+
+    // Bearish sweep — today spiked above PDH but closed below it
+    if (todayHigh > pdh && todayClose < pdh) {
+      swept     = true;
+      sweepType = '🔴 BEARISH SWEEP DETECTED';
+      sweepMsg  = 'Price spiked above PDH ₹' + Math.round(pdh) + ' then rejected and closed at ₹' + Math.round(todayClose) + '. Institutions swept stops. PE entry zone.';
+      sweepCol  = 'var(--red)';
+      var sweepSize = ((todayHigh - pdh) / pdh * 100).toFixed(2);
+      confidence = sweepSize > 0.5 ? 'HIGH' : 'MEDIUM';
+      confCol    = sweepSize > 0.5 ? 'var(--green)' : 'var(--amber)';
+    }
+    // Bullish sweep — today spiked below PDL but closed above it
+    else if (todayLow < pdl && todayClose > pdl) {
+      swept
+   async function fetchMarketStructure() {
   var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=1d&range=1mo';
   for (var i = 0; i < PROXIES.length; i++) {
     try {
@@ -2272,6 +2332,7 @@ async function fetchAllNiftyData() {
   await fetchNiftyVWAP(add);
    fetchPDHL();
    fetchMarketStructure();
+   fetchLiquiditySweep();
   add('ℹ️', 'PCR — Enter manually from nseindia.com/option-chain', 'var(--text3)');
   btn.innerHTML = '✅ Data Fetched — Now tap Analyse';
    markFetchDone();
