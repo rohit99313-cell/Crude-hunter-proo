@@ -1784,6 +1784,7 @@ function analyseMCX() {
   var atmPut     = parseFloat(document.getElementById('mcx-atm-put').value)  || 0;
   var dteVal     = parseInt(document.getElementById('mcx-dte').value);
   var vwapVal    = parseFloat(document.getElementById('mcx-vwap').value) || 0;
+   var structure = document.getElementById('mcx-structure').value;
 
   if (!underlying || !callOI || !putOI) {
     alert('Please fill: Underlying Price, Total Call OI, Total Put OI');
