@@ -2817,7 +2817,11 @@ function calcMomentum() {
   else { reasons.push('⚠️ Mixed candles — wait for clarity'); }
 
   var verdict, verdictColor, verdictBg, action;
-  if (absMove < 150) {
+  if (structure === "sideways") {
+  verdict = '⚠️ NO TRADE — Sideways market';
+  action = 'Market is sideways. Avoid trade.';
+}
+   else if (absMove < 150) {
     verdict = '❌ NO TRADE — Move too small'; verdictColor = 'var(--text3)'; verdictBg = 'var(--bg3)';
     action = 'Wait for NIFTY to move at least 150 points.';
   } else if (score >= 70) {
