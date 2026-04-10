@@ -503,6 +503,14 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
 <div id="mcx-vwap-status" style="margin-top:4px;min-height:16px;"></div>
 <button class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="fetchMCXVWAP()">🔄 Auto-fetch WTI VWAP</button>
 </div>
+       <div class="input-group">
+  <label class="input-label">Market Structure (MCX)</label>
+  <select id="mcx-structure">
+    <option value="bullish">Bullish</option>
+    <option value="bearish">Bearish</option>
+    <option value="sideways">Sideways</option>
+  </select>
+</div>
        <div class="input-group" style="margin-top:8px;">
         <label class="input-label">DXY — Dollar Index</label>
         <div id="dxy-display" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-family:var(--mono);font-size:14px;color:var(--text3);">Fetching DXY...</div>
