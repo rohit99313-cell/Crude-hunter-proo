@@ -2824,7 +2824,15 @@ function calcMomentum() {
    else if (absMove < 150) {
     verdict = '❌ NO TRADE — Move too small'; verdictColor = 'var(--text3)'; verdictBg = 'var(--bg3)';
     action = 'Wait for NIFTY to move at least 150 points.';
-  } else if (score >= 70) {
+  else if (structure === "bullish" && dir === "DOWN") {
+  verdict = '⚠️ CONFLICT — Bullish structure but downside signal';
+  action = 'Avoid trade — direction mismatch.';
+}
+else if (structure === "bearish" && dir === "UP") {
+  verdict = '⚠️ CONFLICT — Bearish structure but upside signal';
+  action = 'Avoid trade — direction mismatch.';
+}
+   } else if (score >= 70) {
     verdict = '🟢 STRONG MOMENTUM — HIGH CONVICTION ' + dir; verdictColor = 'var(--green)'; verdictBg = 'var(--green-bg)';
     action = 'Wait for pullback zone below. High conviction ' + dir + ' trade.';
   } else if (score >= 50) {
