@@ -3127,6 +3127,121 @@ function playAlarm() {
 // ═══════════════════════════════════════════════════════════════
 // BRIDGE TEST
 // ═══════════════════════════════════════════════════════════════
+async function fetchTradeJournal() {
+  var s = getSettings();
+  var bridge = s.bridgeUrl;
+  var token  = s.accessToken;
+  var btn    = document.getElementById('journal-btn-text');
+  var status = document.getElementById('journal-status');
+
+  if (!bridge || !token) {
+    status.innerHTML = '<div class="status-box warn">⚠️ Add Bridge URL and Access Token in Settings first.</div>';
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span>Fetching trade history...';
+  status.innerHTML = '';
+
+  try {
+    var r = await fetch(bridge + '?action=orders&access_token=' + token, { signal: AbortSignal.timeout(15000) });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    var orders = (data.data || []).filter(function(o) {
+      return o.tradingsymbol && o.tradingsymbol.includes('CRUDEOIL') && o.status === 'COMPLETE';
+    });
+
+    if (orders.length === 0) {
+      status.innerHTML = '<div class="status-box warn">⚠️ No completed CrudeoilM trades found in last 30 days.</div>';
+      btn.innerHTML = '📓 FETCH MY TRADE HISTORY';
+      return;
+    }
+
+    // Group by symbol → pair buys and sells
+    var trades = [];
+    var bySymbol = {};
+    orders.forEach(function(o) {
+      var sym = o.tradingsymbol;
+      if (!bySymbol[sym]) bySymbol[sym] = { buys: [], sells: [] };
+      if (o.transaction_type === 'BUY') bySymbol[sym].buys.push(o);
+      else bySymbol[sym].sells.push(o);
+    });
+
+    Object.keys(bySymbol).forEach(function(sym) {
+      var buys  = bySymbol[sym].buys;
+      var sells = bySymbol[sym].sells;
+      var totalBuyQty  = buys.reduce(function(a,o)  { return a + o.quantity; }, 0);
+      var totalSellQty = sells.reduce(function(a,o) { return a + o.quantity; }, 0);
+      var avgBuy  = buys.reduce(function(a,o)  { return a + o.average_price * o.quantity; }, 0) / (totalBuyQty || 1);
+      var avgSell = sells.reduce(function(a,o) { return a + o.average_price * o.quantity; }, 0) / (totalSellQty || 1);
+      var minQty  = Math.min(totalBuyQty, totalSellQty);
+      var pnl     = (avgSell - avgBuy) * minQty;
+      var isType  = sym.includes('CE') ? 'CE' : 'PE';
+      var date    = buys.length > 0 ? buys[0].order_timestamp.split('T')[0] : '—';
+      if (minQty > 0) {
+        trades.push({
+          symbol: sym, type: isType, date: date,
+          entryPrice: parseFloat(avgBuy.toFixed(2)),
+          exitPrice:  parseFloat(avgSell.toFixed(2)),
+          qty: minQty, pnl: parseFloat(pnl.toFixed(0)),
+          win: pnl > 0
+        });
+      }
+    });
+
+    trades.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+    // Stats
+    var wins      = trades.filter(function(t) { return t.win; }).length;
+    var losses    = trades.filter(function(t) { return !t.win; }).length;
+    var totalPnl  = trades.reduce(function(a,t) { return a + t.pnl; }, 0);
+    var winRate   = trades.length > 0 ? Math.round(wins / trades.length * 100) : 0;
+    var bestTrade = trades.reduce(function(a,t) { return t.pnl > a.pnl ? t : a; }, trades[0]);
+    var worstTrade= trades.reduce(function(a,t) { return t.pnl < a.pnl ? t : a; }, trades[0]);
+    var ceWins    = trades.filter(function(t) { return t.type==='CE' && t.win; }).length;
+    var ceTrades  = trades.filter(function(t) { return t.type==='CE'; }).length;
+    var peWins    = trades.filter(function(t) { return t.type==='PE' && t.win; }).length;
+    var peTrades  = trades.filter(function(t) { return t.type==='PE'; }).length;
+
+    var pnlCol = totalPnl >= 0 ? 'green' : 'red';
+
+    document.getElementById('journal-result').classList.add('show');
+    document.getElementById('journal-stats').innerHTML =
+      '<div class="metric"><div class="metric-label">Total P&L</div><div class="metric-val ' + pnlCol + '">₹' + totalPnl.toLocaleString('en-IN') + '</div></div>' +
+      '<div class="metric"><div class="metric-label">Win Rate</div><div class="metric-val ' + (winRate>=50?'green':'red') + '">' + winRate + '%</div></div>' +
+      '<div class="metric"><div class="metric-label">Total Trades</div><div class="metric-val amber">' + trades.length + '</div></div>' +
+      '<div class="metric"><div class="metric-label">Wins / Losses</div><div class="metric-val white">' + wins + ' / ' + losses + '</div></div>';
+
+    document.getElementById('journal-summary').innerHTML =
+      '<table class="data-table">' +
+      '<tr><td>Best Trade</td><td style="color:var(--green);">₹' + (bestTrade ? bestTrade.pnl.toLocaleString('en-IN') : '—') + ' (' + (bestTrade ? bestTrade.symbol : '') + ')</td></tr>' +
+      '<tr><td>Worst Trade</td><td style="color:var(--red);">₹' + (worstTrade ? worstTrade.pnl.toLocaleString('en-IN') : '—') + ' (' + (worstTrade ? worstTrade.symbol : '') + ')</td></tr>' +
+      '<tr><td>CE Win Rate</td><td style="color:' + (ceTrades>0&&ceWins/ceTrades>=0.5?'var(--green)':'var(--red)') + ';">' + (ceTrades > 0 ? Math.round(ceWins/ceTrades*100) + '% (' + ceWins + '/' + ceTrades + ')' : '—') + '</td></tr>' +
+      '<tr><td>PE Win Rate</td><td style="color:' + (peTrades>0&&peWins/peTrades>=0.5?'var(--green)':'var(--red)') + ';">' + (peTrades > 0 ? Math.round(peWins/peTrades*100) + '% (' + peWins + '/' + peTrades + ')' : '—') + '</td></tr>' +
+      '</table>';
+
+    document.getElementById('journal-trades').innerHTML = trades.map(function(t) {
+      var col = t.win ? 'var(--green)' : 'var(--red)';
+      var icon = t.win ? '✅' : '❌';
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + icon + ' ' + t.symbol + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);">' + t.date + ' · ' + t.qty + ' qty · Entry ₹' + t.entryPrice + ' → Exit ₹' + t.exitPrice + '</div>' +
+        '</div>' +
+        '<div style="font-size:18px;font-weight:700;font-family:var(--mono);color:' + col + ';">₹' + t.pnl.toLocaleString('en-IN') + '</div>' +
+        '</div></div>';
+    }).join('');
+
+    btn.innerHTML = '✅ Loaded ' + trades.length + ' trades';
+    status.innerHTML = '<div class="status-box ok">✅ ' + trades.length + ' trades loaded · Win rate: ' + winRate + '% · Total P&L: ₹' + totalPnl.toLocaleString('en-IN') + '</div>';
+
+  } catch(e) {
+    status.innerHTML = '<div class="status-box error">❌ Failed: ' + e.message + '</div>';
+    btn.innerHTML = '📓 FETCH MY TRADE HISTORY';
+  }
+}
+
 async function testBridge() {
   var s = getSettings();
   var url = s.bridgeUrl || document.getElementById('set-bridge-url').value;
