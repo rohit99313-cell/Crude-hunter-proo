@@ -1191,6 +1191,30 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
   </div>
 </div>
 
+<!-- TAB 8: JOURNAL -->
+<div class="tab tab-content" id="tab-journal">
+  <div class="card">
+    <div class="card-title">📓 Trade Journal — Auto-fetch from Kite</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Fetches your last 30 days MCX CrudeoilM trades automatically using your Kite access token.</div>
+    <button class="btn btn-primary" onclick="fetchTradeJournal()">
+      <span id="journal-btn-text">📓 FETCH MY TRADE HISTORY</span>
+    </button>
+    <div id="journal-status" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="result-section" id="journal-result">
+    <div class="metric-grid" id="journal-stats"></div>
+    <div class="card">
+      <div class="card-title">📊 Performance Summary</div>
+      <div id="journal-summary"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Trade History</div>
+      <div id="journal-trades"></div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end main-content -->
 </div><!-- end app-shell -->
 
@@ -1203,6 +1227,7 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
   <button class="bnav-btn" onclick="showTab('momentum',this)"><span class="bnav-icon">🚀</span>Flow</button>
   <button class="bnav-btn" onclick="showTab('rules',this)"><span class="bnav-icon">✅</span>Rules</button>
   <button class="bnav-btn" onclick="showTab('settings',this)"><span class="bnav-icon">⚙️</span>Setup</button>
+<button class="bnav-btn" onclick="showTab('journal',this)"><span class="bnav-icon">📓</span>Journal</button>
 </div>
 
 <!-- ALARM OVERLAYS — pointer-events:none by default (see CSS fix above) -->
