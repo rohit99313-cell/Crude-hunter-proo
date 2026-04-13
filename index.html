@@ -1730,6 +1730,64 @@ if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">MCX VWAP
   }
 }
 
+async function fetchOpeningRange() {
+  var el = document.getElementById('opening-range-display');
+  if (!el) return;
+  try {
+    var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=15m&range=1d';
+    var result = null;
+    for (var i = 0; i < PROXIES.length; i++) {
+      try {
+        var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(8000) });
+        var d = await r.json();
+        result = d && d.chart && d.chart.result && d.chart.result[0];
+        if (result) break;
+      } catch(e) {}
+    }
+    if (!result) throw new Error('fetch failed');
+    var timestamps = result.timestamp || [];
+    var highs = result.indicators.quote[0].high || [];
+    var lows = result.indicators.quote[0].low || [];
+    var orHighs = [], orLows = [];
+    timestamps.forEach(function(ts, idx) {
+      var ist = new Date((ts + 19800) * 1000);
+      var h = ist.getUTCHours(), m = ist.getUTCMinutes();
+      if ((h === 3 && m >= 45) || (h === 4 && m < 0)) {
+        if (highs[idx]) orHighs.push(highs[idx]);
+        if (lows[idx]) orLows.push(lows[idx]);
+      }
+    });
+    if (orHighs.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text3);">Market not yet open or OR not formed.</div>';
+      return;
+    }
+    var orHigh = Math.round(Math.max.apply(null, orHighs));
+    var orLow = Math.round(Math.min.apply(null, orLows));
+    var curr = result.meta.regularMarketPrice;
+    var sig = '', sigCol = 'var(--amber)';
+    if (curr > orHigh) {
+      sig = '🟢 BREAKOUT — Price above OR High ₹' + orHigh + '. CE signal.';
+      sigCol = 'var(--green)';
+    } else if (curr < orLow) {
+      sig = '🔴 BREAKDOWN — Price below OR Low ₹' + orLow + '. PE signal.';
+      sigCol = 'var(--red)';
+    } else {
+      sig = '↔ Inside Range ₹' + orLow + ' – ₹' + orHigh + '. Wait for breakout.';
+      sigCol = 'var(--amber)';
+    }
+    el.innerHTML =
+      '<div style="background:var(--bg3);border-radius:var(--r);padding:12px;">' +
+      '<div style="font-size:14px;font-weight:700;color:' + sigCol + ';margin-bottom:10px;">' + sig + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+      '<div class="metric"><div class="metric-label">OR HIGH</div><div class="metric-val red">₹' + orHigh + '</div></div>' +
+      '<div class="metric"><div class="metric-label">OR LOW</div><div class="metric-val green">₹' + orLow + '</div></div>' +
+      '<div class="metric"><div class="metric-label">OR WIDTH</div><div class="metric-val amber">' + (orHigh - orLow) + ' pts</div></div>' +
+      '</div></div>';
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);">OR fetch failed. Try again after 9:30 AM.</div>';
+  }
+}
+
 async function fetchNiftyVWAP(addFn) {
   var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=5m&range=1d';
   for (var i = 0; i < PROXIES.length; i++) {
