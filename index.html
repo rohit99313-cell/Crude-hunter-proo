@@ -731,7 +731,12 @@ textarea { resize: vertical; min-height: 80px; font-size: 13px; }
   </div>
 
   <div class="card">
-    <div class="card-title">💥 Momentum Exhaustion Detector</div>
+  <div class="card-title">⏰ Time Quality Warning</div>
+  <div id="time-quality-display"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">💥 Momentum Exhaustion Detector</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">For situations like today — Nifty up 560pts, you sensed reversal. This confirms or denies it.</div>
     <div class="input-row">
       <div class="input-group">
@@ -2496,6 +2501,7 @@ async function fetchAllNiftyData() {
    fetchPDHL();
    fetchMarketStructure();
    fetchLiquiditySweep();
+fetch15mTrend();
 fetchOpeningRange();
   add('ℹ️', 'PCR — Enter manually from nseindia.com/option-chain', 'var(--text3)');
   btn.innerHTML = '✅ Data Fetched — Now tap Analyse';
