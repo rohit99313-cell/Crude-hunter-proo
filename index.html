@@ -2146,24 +2146,59 @@ function analyseMCX() {
   var maxPain = callWall && putWall ? Math.round((callWall + putWall) / 2) : underlying;
   var ivSkew  = atmPut > 0 && atmCall > 0 ? atmPut / atmCall : 1;
 
+// ── MCX RESEARCH-BACKED SCORING ──
+  // #1 WTI Direction via VWAP (30pts) — MCX tracks WTI directly
+  // #2 PCR + OI (25pts) — Options sentiment
+  // #3 Max Pain + Wall (20pts) — Price magnet
+  // #4 USD/INR (15pts) — Rupee weakness = crude bullish in INR
+  // #5 IV Skew (10pts) — Secondary sentiment
+
+  // Signal 1: VWAP (30pts) — most important for crude
+  var vwapScore = 0;
+  if (vwapVal > 0) {
+    var vwapPct = ((underlying - vwapVal) / vwapVal * 100);
+    if      (vwapPct > 1.5)  vwapScore =  3;  // Well above VWAP — strong bullish
+    else if (vwapPct > 0.5)  vwapScore =  2;
+    else if (vwapPct > 0.1)  vwapScore =  1;
+    else if (vwapPct < -1.5) vwapScore = -3;  // Well below VWAP — strong bearish
+    else if (vwapPct < -0.5) vwapScore = -2;
+    else if (vwapPct < -0.1) vwapScore = -1;
+  }
+
+  // Signal 2: PCR + OI (25pts)
   var oiScore = 0;
-  if      (pcr > 1.3)  oiScore =  2;
+  if      (pcr > 1.5)  oiScore =  3;  // Very bullish
+  else if (pcr > 1.3)  oiScore =  2;
   else if (pcr > 1.0)  oiScore =  1;
-  else if (pcr < 0.7)  oiScore = -2;
+  else if (pcr < 0.65) oiScore = -3;  // Very bearish
+  else if (pcr < 0.8)  oiScore = -2;
   else if (pcr < 0.9)  oiScore = -1;
 
+  // Signal 3: Max Pain + Wall (20pts)
   var mpScore = 0;
-  if      (underlying < maxPain - 100) mpScore =  1;
-  else if (underlying > maxPain + 100) mpScore = -1;
+  if      (underlying < maxPain - 100) mpScore =  2;
+  else if (underlying < maxPain - 50)  mpScore =  1;
+  else if (underlying > maxPain + 100) mpScore = -2;
+  else if (underlying > maxPain + 50)  mpScore = -1;
 
   var wallScore = 0;
   if (callWall && underlying < callWall - 150) wallScore =  1;
   if (putWall  && underlying > putWall  + 150) wallScore = -1;
 
+  // Signal 4: USD/INR (15pts) — Rupee weak = crude costs more in INR = bullish MCX
+  var usdInrScore = 0;
+  var liveUsdInr = parseFloat(localStorage.getItem('live_usdinr') || '0');
+  if (liveUsdInr > 0) {
+    if      (liveUsdInr > 87) usdInrScore =  2;  // Very weak rupee — strongly bullish MCX
+    else if (liveUsdInr > 85) usdInrScore =  1;
+    else if (liveUsdInr < 83) usdInrScore = -2;  // Strong rupee — bearish MCX
+    else if (liveUsdInr < 84) usdInrScore = -1;
+  }
+
+  // Signal 5: IV Skew (10pts)
   var ivScore = 0;
   if      (ivSkew > 1.15) ivScore =  1;
   else if (ivSkew < 0.85) ivScore = -1;
-
   // USD/INR scoring modifier
 var usdInrScore = 0, usdInrLabel = '—';
 var liveUsdInr = parseFloat(localStorage.getItem('live_usdinr') || '0');
