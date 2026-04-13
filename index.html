@@ -2233,7 +2233,7 @@ if (liveUsdInr > 0) {
     }
   }
 
-  var totalScore = oiScore + mpScore + wallScore + ivScore + vwapScore + usdInrScore;
+  var totalScore = vwapScore + oiScore + mpScore + wallScore + usdInrScore + ivScore;
   var dualCheck  = Math.sign(oiScore) === Math.sign(mpScore) && oiScore !== 0;
   var mcxScore100 = Math.round(((totalScore + 7) / 14) * 100);
   mcxScore100 = Math.max(0, Math.min(100, mcxScore100));
