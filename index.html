@@ -2805,12 +2805,13 @@ document.getElementById('fii-stale-banner').innerHTML = fiiBanner;
     '</table>';
 
   var layers = [
-    { name:'L1 — Global Macro',     score:l1, max:20, color:'var(--blue)'   },
-    { name:'L2 — Stock Alignment',  score:l2, max:25, color:'var(--green)'  },
-    { name:'L3 — Technicals',       score:l3, max:25, color:'var(--purple)' },
-    { name:'L4 — Option Chain PCR', score:l4, max:20, color:'var(--amber)'  },
-    { name:'L5 — FII + VIX',        score:l5, max:10, color:'var(--orange)' }
+  { name:'L1 — PCR + OI',              score:l1, max:25, color:'var(--blue)'   },
+    { name:'L2 — VWAP Position',         score:l2, max:20, color:'var(--green)'  },
+    { name:'L3 — Market Structure',      score:l3, max:20, color:'var(--purple)' },
+    { name:'L4 — RSI + Technicals',      score:l4, max:20, color:'var(--amber)'  },
+   { name:'L5 — VIX + FII + Alignment', score:l5, max:15, color:'var(--orange)' }
   ];
+  document.getElementById('nifty-layers')
   document.getElementById('nifty-layers').innerHTML = layers.map(function(l) {
     return '<div class="layer-row">' +
       '<div class="layer-name">' + l.name + '</div>' +
