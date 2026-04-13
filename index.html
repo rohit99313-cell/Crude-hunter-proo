@@ -1743,6 +1743,43 @@ if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">MCX VWAP
   }
 }
 
+function showTimeQuality() {
+  var el = document.getElementById('time-quality-display');
+  if (!el) return;
+  var now = new Date();
+  var ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  var h = ist.getHours(), m = ist.getMinutes();
+  var mins = h * 60 + m;
+  var msg, col, bg, border, icon;
+  if (mins < 9*60+15) {
+    icon='🔴'; msg='Market not open yet. Opens at 9:15 AM.'; col='var(--red)'; bg='var(--red-bg)'; border='var(--red-border)';
+  } else if (mins < 9*60+30) {
+    icon='🟡'; msg='Opening Range forming (9:15–9:30 AM). DO NOT trade yet. Wait for breakout.'; col='var(--amber)'; bg='var(--amber-bg)'; border='var(--amber-border)';
+  } else if (mins < 10*60) {
+    icon='🟠'; msg='Early session (9:30–10:00 AM). High volatility. Risky entry. Wait for settle.'; col='var(--orange)'; bg='var(--orange-bg)'; border='var(--orange)';
+  } else if (mins < 14*60+30) {
+    icon='🟢'; msg='Prime trading window (10:00 AM–2:30 PM). Best time to trade NIFTY.'; col='var(--green)'; bg='var(--green-bg)'; border='var(--green-border)';
+  } else if (mins < 15*60+30) {
+    icon='🔴'; msg='Expiry danger zone (2:30–3:30 PM). Avoid new positions. Theta accelerating.'; col='var(--red)'; bg='var(--red-bg)'; border='var(--red-border)';
+  } else if (mins < 18*60) {
+    icon='⚫'; msg='Market closed (after 3:30 PM). MCX opens at 6:00 PM.'; col='var(--text3)'; bg='var(--bg3)'; border='var(--border)';
+  } else if (mins < 21*60) {
+    icon='🟢'; msg='MCX prime window (6:00–9:00 PM). Best time to trade CrudeoilM.'; col='var(--green)'; bg='var(--green-bg)'; border='var(--green-border)';
+  } else if (mins < 22*60+30) {
+    icon='🟡'; msg='MCX caution zone (9:00–10:30 PM). Theta burning. Book profits if in trade.'; col='var(--amber)'; bg='var(--amber-bg)'; border='var(--amber-border)';
+  } else if (mins < 23*60+30) {
+    icon='🔴'; msg='MCX danger zone (10:30–11:30 PM). DO NOT enter new positions. Exit existing.'; col='var(--red)'; bg='var(--red-bg)'; border='var(--red-border)';
+  } else {
+    icon='⚫'; msg='MCX closed. Next session opens 9:00 AM tomorrow.'; col='var(--text3)'; bg='var(--bg3)'; border='var(--border)';
+  }
+  var timeStr = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ' IST';
+  el.innerHTML =
+    '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:var(--r);padding:12px;">' +
+    '<div style="font-size:22px;font-weight:900;color:' + col + ';margin-bottom:4px;">' + icon + ' ' + timeStr + '</div>' +
+    '<div style="font-size:13px;color:var(--text);line-height:1.6;">' + msg + '</div>' +
+    '</div>';
+}
+
 async function fetch15mTrend() {
   var el = document.getElementById('trend-15m-display');
   if (!el) return;
