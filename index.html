@@ -1738,7 +1738,71 @@ if (el) el.innerHTML = '<span style="color:' + col + ';font-size:11px;">MCX VWAP
   }
 }
 
-async function fetchOpeningRange() {
+async function fetch15mTrend() {
+  var el = document.getElementById('trend-15m-display');
+  if (!el) return;
+  try {
+    var url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?interval=15m&range=1d';
+    var result = null;
+    for (var i = 0; i < PROXIES.length; i++) {
+      try {
+        var r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(8000) });
+        var d = await r.json();
+        result = d && d.chart && d.chart.result && d.chart.result[0];
+        if (result) break;
+      } catch(e) {}
+    }
+    if (!result) throw new Error('fetch failed');
+    var closes = result.indicators.quote[0].close || [];
+    var highs  = result.indicators.quote[0].high  || [];
+    var lows   = result.indicators.quote[0].low   || [];
+    closes = closes.filter(Boolean);
+    highs  = highs.filter(Boolean);
+    lows   = lows.filter(Boolean);
+    if (closes.length < 4) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text3);">Not enough candles yet. Try after 10 AM.</div>';
+      return;
+    }
+    var last = closes.length;
+    var hh = highs[last-1] > highs[last-2] && highs[last-2] > highs[last-3];
+    var hl = lows[last-1]  > lows[last-2]  && lows[last-2]  > lows[last-3];
+    var lh = highs[last-1] < highs[last-2] && highs[last-2] < highs[last-3];
+    var ll = lows[last-1]  < lows[last-2]  && lows[last-2]  < lows[last-3];
+    var trend, tCol, tBg, tBorder, bias;
+    if (hh && hl) {
+      trend = '📈 UPTREND'; tCol = 'var(--green)'; tBg = 'var(--green-bg)'; tBorder = 'var(--green-border)';
+      bias = 'Higher Highs + Higher Lows confirmed. CE bias.';
+    } else if (lh && ll) {
+      trend = '📉 DOWNTREND'; tCol = 'var(--red)'; tBg = 'var(--red-bg)'; tBorder = 'var(--red-border)';
+      bias = 'Lower Highs + Lower Lows confirmed. PE bias.';
+    } else if (hh || hl) {
+      trend = '↗ MILD UPTREND'; tCol = 'var(--green)'; tBg = 'var(--green-bg)'; tBorder = 'var(--green-border)';
+      bias = 'Partial higher structure. Mild CE bias.';
+    } else if (lh || ll) {
+      trend = '↘ MILD DOWNTREND'; tCol = 'var(--red)'; tBg = 'var(--red-bg)'; tBorder = 'var(--red-border)';
+      bias = 'Partial lower structure. Mild PE bias.';
+    } else {
+      trend = '↔ SIDEWAYS'; tCol = 'var(--amber)'; tBg = 'var(--amber-bg)'; tBorder = 'var(--amber-border)';
+      bias = 'No clear structure. Wait for breakout.';
+    }
+    var currClose = closes[last-1];
+    var prevClose = closes[last-2];
+    var chg = ((currClose - prevClose) / prevClose * 100).toFixed(2);
+    el.innerHTML =
+      '<div style="background:' + tBg + ';border:1px solid ' + tBorder + ';border-radius:var(--r);padding:12px;">' +
+      '<div style="font-size:18px;font-weight:900;color:' + tCol + ';margin-bottom:6px;">' + trend + '</div>' +
+      '<div style="font-size:13px;color:var(--text);margin-bottom:10px;">' + bias + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+      '<div class="metric"><div class="metric-label">LAST CLOSE</div><div class="metric-val amber">₹' + Math.round(currClose) + '</div></div>' +
+      '<div class="metric"><div class="metric-label">15M CHANGE</div><div class="metric-val ' + (chg>=0?'green':'red') + '">' + (chg>=0?'+':'') + chg + '%</div></div>' +
+      '<div class="metric"><div class="metric-label">CANDLES</div><div class="metric-val amber">' + last + ' seen</div></div>' +
+      '</div></div>';
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);">15m trend fetch failed. Try again.</div>';
+  }
+}
+
+async function fetchOpeningRange() {async function fetchOpeningRange() {
   var el = document.getElementById('opening-range-display');
   if (!el) return;
   try {
