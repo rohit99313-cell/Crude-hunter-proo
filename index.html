@@ -2072,13 +2072,12 @@ async function autoFetchMCXChain() {
   var bridge = s.bridgeUrl;
   var token  = s.accessToken;
   var expiry = document.getElementById('mcx-expiry-auto').value;
-
-  if (!input || !input.files || !input.files[0]) {
+if (!bridge || !token) {
     document.getElementById('mcx-auto-status').innerHTML =
       '<div class="status-box warn">⚠️ Add Bridge URL and Access Token in Settings first.</div>';
     return;
-  }
-
+}
+  
   var btn = document.getElementById('mcx-auto-btn-text');
   btn.innerHTML = '<span class="spinner"></span>Fetching MCX chain...';
   document.getElementById('mcx-auto-status').innerHTML = '';
